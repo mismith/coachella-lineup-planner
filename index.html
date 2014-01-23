@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<link rel="apple-touch-icon-precomposed" href="assets/img/touchicon.png" type="image/png">
+	<link rel="shortcut icon" href="assets/img/touchicon.png" type="image/png">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css">
+	<link rel="stylesheet" href="assets/css/base.css" type="text/css">
+	
+	<title>Coachella LP</title>
+	
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+<body ng-app="coachella">
+
+<div id="app">
+	<button fb-login>Login with Facebook</button>
+	<ul ng-controller="BandsCtrl" class="list-group">
+		<li ng-repeat="(band_id, band) in bands" class="list-group-item">
+			Day {{ band.day }}: {{ band.name }}
+		</li>
+	</ul>
+</div>
+
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.9.0/ui-bootstrap-tpls.min.js"></script>
+<script src="//cdn.firebase.com/v0/firebase.js"></script>
+<script src="//cdn.firebase.com/js/simple-login/1.2.1/firebase-simple-login.js"></script>
+<script src="//cdn.firebase.com/libs/angularfire/0.6.0/angularfire.min.js"></script>
+<script src="assets/js/base.js"></script>
+</body>
+</html>
