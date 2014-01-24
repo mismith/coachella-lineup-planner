@@ -11,6 +11,7 @@ window.coachella = angular.module('coachella', ['ui.bootstrap', 'firebase'])
 		
 		var usersRef = $rootScope.$ref.child('users');
 		$scope.users = $firebase(usersRef);
+		$scope.users.$bind($scope, 'users');
 		
 		$scope.vote = function(band_id, vote){
 			var save = function(){
@@ -34,13 +35,11 @@ window.coachella = angular.module('coachella', ['ui.bootstrap', 'firebase'])
 		};
 		$scope.getScore = function(band_id){
 			var votes = $scope.bands[band_id].votes,
-				total = 0,
-				count = 0;
+				total = 0;
 			angular.forEach(votes, function(item){
 				total += item.vote;
-				count++;
 			});
-			return count ? total / count : 0;
+			return total;
 		};
 	})
 	
