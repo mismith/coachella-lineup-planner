@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	
-	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+	<meta name="viewport" content="width=640, user-scalable=no, initial-scale=1.0">
 	<meta name="mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -26,7 +26,7 @@
 				<button ng-click="auth.$login('facebook')" class="btn btn-facebook">Login with Facebook</button>
 			</div>
 			<div ng-show="auth.user">
-				Logged in as <strong>{{ auth.user.name }} <img ng-src="http://graph.facebook.com/{{ auth.user.id }}/picture?type=square" width="32" height="32"></strong> <button ng-click="auth.$logout()" class="btn btn-facebook">Logout</button>
+				Logged in as <strong>{{ auth.user.name }} <img ng-src="http://graph.facebook.com/{{ auth.user.id }}/picture?type=square" width="34" height="34"></strong> <button ng-click="auth.$logout()" class="btn btn-facebook">Logout</button>
 			</div>
 		</nav>
 	</header>
