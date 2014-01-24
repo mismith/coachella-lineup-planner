@@ -3,6 +3,10 @@ window.coachella = angular.module('coachella', ['ui.bootstrap', 'firebase'])
 	.controller('AppCtrl', function($rootScope, $firebaseSimpleLogin){
 		$rootScope.$ref = new Firebase('https://coachellalp.firebaseio.com');
 		$rootScope.auth = $firebaseSimpleLogin($rootScope.$ref);
+		
+		$rootScope.$on('$firebaseSimpleLogin:login', function(e, user){
+			$rootScope.$ref.child('users/' + user.uid).set(user);
+		});
 	})
 	.controller('BandsCtrl', function($scope, $rootScope, $firebase) {
 		var bandsRef = $rootScope.$ref.child('bands');
