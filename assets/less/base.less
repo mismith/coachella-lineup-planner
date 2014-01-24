@@ -12,6 +12,8 @@
 @u: 10px;
 @t: 300ms;
 
+@facebook: #3b5998;
+
 /* tags */
 * {
 	.box-sizing;
@@ -26,14 +28,52 @@ body {
 body {
 	
 }
+img {
+	.border-radius(4px);
+	vertical-align: middle;
+	border: solid 1px @neutral;
+}
 
 /* template */
-#header {
-	
+h1 {
+	padding: @u;
 }
-#content {
+nav {
+	text-align: right;
+	padding: @u;
 	
+	.btn {
+		margin-left: @u;
+	}
 }
-#footer {
+
+.tablify {
+	display: table;
+	width: 100%;
 	
+	> * {
+		display: table-cell;
+		vertical-align: middle;
+	}
+}
+.btn {
+	&.btn-facebook {
+		background-color: @facebook;
+		color: #FFF;
+	}
+}
+
+td {
+	&.voters {
+		vertical-align: middle !important;
+		padding: 0 !important;
+		
+		ul {
+			margin: 0;
+		}
+	}
+	&.score {
+		font-size: 1.2em;
+		font-weight: bold;
+	}
 }

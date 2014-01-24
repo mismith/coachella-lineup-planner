@@ -16,15 +16,50 @@
 	
 	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
 </head>
-<body ng-app="coachella">
+<body ng-app="coachella" ng-controller="AppCtrl">
 
 <div id="app">
-	<button fb-login>Login with Facebook</button>
-	<ul ng-controller="BandsCtrl" class="list-group">
-		<li ng-repeat="(band_id, band) in bands" class="list-group-item">
-			Day {{ band.day }}: {{ band.name }}
-		</li>
-	</ul>
+	<header class="navbar navbar-default tablify">
+		<h1>Coachella LP</h1>
+		<nav>
+			<div ng-show=" ! auth.user">
+				<button ng-click="auth.$login('facebook')" class="btn btn-facebook">Login with Facebook</button>
+			</div>
+			<div ng-show="auth.user">
+				Logged in as <strong>{{ auth.user.name }} <img ng-src="http://graph.facebook.com/{{ auth.user.id }}/picture?type=square" width="32" height="32"></strong> <button ng-click="auth.$logout()" class="btn btn-facebook">Logout</button>
+			</div>
+		</nav>
+	</header>
+	<table ng-controller="BandsCtrl" class="table">
+		<thead>
+			<th>Day</th>
+			<th>Band</th>
+			<th>My Vote</th>
+			<th>Voters</th>
+			<th>Score</th>
+		</thead>
+		<tbody>
+			<tr ng-repeat="(band_id, band) in bands">
+				<td>{{ band.day }}</td>
+				<td>{{ band.name }}</td>
+				<td>
+					<button ng-click="vote(band_id, -1)" class="btn btn-default btn-xs" ng-class="{'btn-danger':  auth.user ? band.votes[auth.user.uid].vote == -1 : false}">-1</button>
+					<button ng-click="vote(band_id, 1)" class="btn btn-default btn-xs" ng-class="{'btn-warning': auth.user ? band.votes[auth.user.uid].vote == 1 : false}">1</button>
+					<button ng-click="vote(band_id, 2)" class="btn btn-default btn-xs" ng-class="{'btn-success': auth.user ? band.votes[auth.user.uid].vote == 2 : false}">2</button>
+				</td>
+				<td class="voters">
+					<ul class="list-unstyled">
+						<li ng-repeat="(user_id, vote) in band.votes">
+							<div class="btn btn-xs" ng-class="{'btn-danger': vote.vote == -1, 'btn-warning': vote.vote == 1, 'btn-success': vote.vote == 2}">
+								<img ng-src="http://graph.facebook.com/{{ users[user_id].id }}/picture?type=square" width="24" height="24" title="{{ users[user_id].name }}" style="margin-left: -4px; margin-right: -4px;">
+							</div>
+						</li>
+					</ul>
+				</td>
+				<td class="score">{{ getScore(band_id) }}</td>
+			</tr>
+		</tbody>
+	</table>
 </div>
 
 <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
