@@ -37,14 +37,50 @@ window.coachella = angular.module('coachella', ['ui.bootstrap', 'firebase'])
 				save();
 			}
 		};
-		$scope.getScore = function(band_id){
-			var votes = $scope.bands[band_id].votes,
-				total = 0;
+		
+		$scope.orderBy     = undefined;
+		$scope.orderByStr  = undefined;
+		$scope.orderByDir  = undefined;
+		$scope.toggleOrder = function(key){
+			if($scope.orderByStr == key) $scope.orderByDir = ! $scope.orderByDir;
+			$scope.orderByStr = key;
+			switch(key){
+				case 'votes':
+					key = function(item){
+						var length = 0;
+						if(item.votes){
+							for(var i in item.votes) length++;
+						}
+						return length;
+					};
+					break;
+				case 'vote':
+					key = function(item){
+						var order = -2;
+						if(item.votes){
+							angular.forEach(item.votes, function(vote, user_uid){
+								if(user_uid == $rootScope.auth.user.uid) order = vote.vote;
+							});
+						}
+						return order;
+					};
+					break;
+			}
+			$scope.orderBy = key;
+			console.log($scope);
+		};
+		$scope.filterDay = 0;
+	})
+	.controller('BandCtrl', function($scope) {
+		$scope.init = function(band){
+			$scope.data = band;
+		};
+		$scope.$watch('data.votes', function(votes){
+			var total = 0;
 			angular.forEach(votes, function(item){
 				total += item.vote;
 			});
-			return total;
-		};
+			return $scope.data.score = total;
+		});
 	})
-	
 	;

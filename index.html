@@ -30,22 +30,29 @@
 			</div>
 		</nav>
 	</header>
-	<table ng-controller="BandsCtrl" class="table">
+	<table class="table" ng-controller="BandsCtrl">
 		<thead>
-			<th>Day</th>
-			<th>Band</th>
-			<th>My Vote</th>
-			<th>Voters</th>
-			<th>Score</th>
+			<th ng-show=" ! filterDay" ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
+			<th ng-click="toggleOrder('name')">
+				Band<span ng-show="orderByStr == 'name'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span>
+				<ul ng-click="$event.stopPropagation()" class="list-unstyled btn-group pull-right">
+					<li ng-repeat="(day_id, day) in ['All Days', 'Day 1', 'Day 2', 'Day 3']" ng-click="$parent.filterDay = day_id" class="btn btn-xs btn-default" ng-class="{'btn-primary': filterDay == day_id}">
+						{{ day }}
+					</li>
+				</ul>
+			</th>
+			<th ng-click="toggleOrder('vote')">My Vote<span ng-show="orderByStr == 'vote'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
+			<th ng-click="toggleOrder('votes')">Voters<span ng-show="orderByStr == 'votes'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
+			<th ng-click="toggleOrder('score')">Score<span ng-show="orderByStr == 'score'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
 		</thead>
 		<tbody>
-			<tr ng-repeat="(band_id, band) in bands">
-				<td>{{ band.day }}</td>
+			<tr ng-repeat="band in bands | orderByPriority | orderBy:orderBy:orderByDir | filter:filterDay ? {day:filterDay} : false" ng-controller="BandCtrl" ng-init="init(band)">
+				<td ng-show=" ! filterDay">{{ band.day }}</td>
 				<td>{{ band.name }}</td>
-				<td>
-					<button ng-click="vote(band_id, -1)" class="btn btn-default btn-xs" ng-class="{'btn-danger':  auth.user ? band.votes[auth.user.uid].vote == -1 : false}">-1</button>
-					<button ng-click="vote(band_id, 1)" class="btn btn-default btn-xs" ng-class="{'btn-warning': auth.user ? band.votes[auth.user.uid].vote == 1 : false}">1</button>
-					<button ng-click="vote(band_id, 2)" class="btn btn-default btn-xs" ng-class="{'btn-success': auth.user ? band.votes[auth.user.uid].vote == 2 : false}">2</button>
+				<td class="buttons">
+					<button ng-click="vote(band.$id, -1)" class="btn btn-default btn-sm" ng-class="{'btn-danger':  auth.user ? band.votes[auth.user.uid].vote == -1 : false}">-1</button>
+					<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': auth.user ? band.votes[auth.user.uid].vote == 1 : false}">1</button>
+					<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': auth.user ? band.votes[auth.user.uid].vote == 2 : false}">2</button>
 				</td>
 				<td class="voters">
 					<ul class="list-unstyled">
@@ -56,7 +63,7 @@
 						</li>
 					</ul>
 				</td>
-				<td class="score">{{ getScore(band_id) }}</td>
+				<td class="score">{{ band.score }}</td>
 			</tr>
 		</tbody>
 	</table>
