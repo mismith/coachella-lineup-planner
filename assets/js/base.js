@@ -37,6 +37,28 @@ window.coachella = angular.module('coachella', ['ui.bootstrap', 'firebase'])
 				save();
 			}
 		};
+		$scope.mustsee = function(band_id){
+			var save = function(){
+				var voteRef = $scope.bands.$child(band_id + '/mustsee/' + $rootScope.auth.user.uid);
+				
+				voteRef.$on('loaded', function(){
+					if(voteRef.$value){
+						voteRef.$remove();
+					} else {
+						voteRef.$set(true);
+					}
+				});
+			}
+			if ( ! $rootScope.auth.user){
+				$rootScope.auth.$login('facebook').then(function(user){
+					save();
+				}, function(error){
+					console.error(error);
+				});
+			}else{
+				save();
+			}
+		};
 		
 		$scope.orderBy     = undefined;
 		$scope.orderByStr  = undefined;
