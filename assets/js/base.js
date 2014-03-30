@@ -67,6 +67,15 @@ window.coachella = angular.module('coachella', ['ui.bootstrap', 'firebase'])
 			if($scope.orderByStr == key) $scope.orderByDir = ! $scope.orderByDir;
 			$scope.orderByStr = key;
 			switch(key){
+				case 'mustsee':
+					key = function(item){
+						var length = 0;
+						if(item.mustsee){
+							for(var i in item.mustsee) length++;
+						}
+						return length;
+					};
+					break;
 				case 'votes':
 					key = function(item){
 						var length = 0;
