@@ -34,12 +34,12 @@
 		<thead>
 			<th ng-show=" ! filterDay" ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
 			<th ng-click="toggleOrder('name')">
-				Band<span ng-show="orderByStr == 'name'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span>
 				<ul ng-click="$event.stopPropagation()" class="list-unstyled btn-group pull-right">
 					<li ng-repeat="(day_id, day) in ['All Days', 'Day 1', 'Day 2', 'Day 3']" ng-click="$parent.filterDay = day_id" class="btn btn-xs btn-default" ng-class="{'btn-primary': filterDay == day_id}">
 						{{ day }}
 					</li>
 				</ul>
+				Band<span ng-show="orderByStr == 'name'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span>
 			</th>
 			<th ng-click="toggleOrder('vote')">My Vote<span ng-show="orderByStr == 'vote'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
 			<th ng-click="toggleOrder('votes')">Voters<span ng-show="orderByStr == 'votes'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>

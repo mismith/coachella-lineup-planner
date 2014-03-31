@@ -45,6 +45,7 @@ nav .btn {
 .tablify {
   display: table;
   width: 100%;
+  margin: 0;
 }
 .tablify > * {
   display: table-cell;
