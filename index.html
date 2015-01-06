@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	
-	<meta name="viewport" content="width=640">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
 	<meta name="mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -26,35 +26,26 @@
 				<button ng-click="auth.$login('facebook')" class="btn btn-facebook">Login with Facebook</button>
 			</div>
 			<div ng-show="auth.user">
-				Logged in as <strong>{{ auth.user.name }} <img ng-src="http://graph.facebook.com/{{ auth.user.id }}/picture?type=square" width="34" height="34"></strong> <button ng-click="auth.$logout()" class="btn btn-facebook">Logout</button>
+				Logged in as <strong>{{ auth.user.name }} <img ng-src="http://graph.facebook.com/{{ auth.user.id }}/picture?type=square" width="32" height="32"></strong> <button ng-click="auth.$logout()" class="btn btn-facebook">Logout</button>
 			</div>
 		</nav>
 	</header>
-	<table class="table" ng-controller="BandsCtrl">
+	<table ng-controller="BandsCtrl" class="table">
 		<thead>
-			<th ng-show=" ! filterDay" ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-			<th ng-click="toggleOrder('name')">
-				<ul ng-click="$event.stopPropagation()" class="list-unstyled btn-group pull-right">
-					<li ng-repeat="(day_id, day) in ['All Days', 'Day 1', 'Day 2', 'Day 3']" ng-click="$parent.filterDay = day_id" class="btn btn-xs btn-default" ng-class="{'btn-primary': filterDay == day_id}">
-						{{ day }}
-					</li>
-				</ul>
-				Band<span ng-show="orderByStr == 'name'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span>
-			</th>
-			<th ng-click="toggleOrder('vote')">My Vote<span ng-show="orderByStr == 'vote'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-			<th ng-click="toggleOrder('votes')">Voters<span ng-show="orderByStr == 'votes'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-			<th ng-click="toggleOrder('mustsee')">Must See<span ng-show="orderByStr == 'mustsee'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-			<th ng-click="toggleOrder('score')">Score<span ng-show="orderByStr == 'score'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
+			<th>Day</th>
+			<th>Band</th>
+			<th>My Vote</th>
+			<th>Voters</th>
+			<th>Score</th>
 		</thead>
 		<tbody>
-			<tr ng-repeat="band in bands | orderByPriority | orderBy:orderBy:orderByDir | filter:filterDay ? {day:filterDay} : false" ng-controller="BandCtrl" ng-init="init(band)">
-				<td ng-show=" ! filterDay">{{ band.day }}</td>
+			<tr ng-repeat="(band_id, band) in bands">
+				<td>{{ band.day }}</td>
 				<td>{{ band.name }}</td>
-				<td class="buttons">
-					<button ng-click="vote(band.$id, -1)" class="btn btn-default btn-sm" ng-class="{'btn-danger':  auth.user ? band.votes[auth.user.uid].vote == -1 : false}">-1</button>
-					<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': auth.user ? band.votes[auth.user.uid].vote == 1 : false}">1</button>
-					<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': auth.user ? band.votes[auth.user.uid].vote == 2 : false}">2</button>
-					<button ng-click="mustsee(band.$id)" class="btn btn-default btn-sm" ng-class="{'btn-info': auth.user ? band.mustsee[auth.user.uid] : false}"><i class="glyphicon glyphicon-star"></i></button>
+				<td>
+					<button ng-click="vote(band_id, -1)" class="btn btn-default btn-xs" ng-class="{'btn-danger':  auth.user ? band.votes[auth.user.uid].vote == -1 : false}">-1</button>
+					<button ng-click="vote(band_id, 1)" class="btn btn-default btn-xs" ng-class="{'btn-warning': auth.user ? band.votes[auth.user.uid].vote == 1 : false}">1</button>
+					<button ng-click="vote(band_id, 2)" class="btn btn-default btn-xs" ng-class="{'btn-success': auth.user ? band.votes[auth.user.uid].vote == 2 : false}">2</button>
 				</td>
 				<td class="voters">
 					<ul class="list-unstyled">
@@ -65,16 +56,7 @@
 						</li>
 					</ul>
 				</td>
-				<td class="mustseers">
-					<ul class="list-unstyled">
-						<li ng-repeat="(user_id, vote) in band.mustsee">
-							<div class="btn btn-xs btn-info">
-								<img ng-src="http://graph.facebook.com/{{ users[user_id].id }}/picture?type=square" width="24" height="24" title="{{ users[user_id].name }}" style="margin-left: -4px; margin-right: -4px;">
-							</div>
-						</li>
-					</ul>
-				</td>
-				<td class="score">{{ band.score }}</td>
+				<td class="score">{{ getScore(band_id) }}</td>
 			</tr>
 		</tbody>
 	</table>
@@ -84,7 +66,7 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.9.0/ui-bootstrap-tpls.min.js"></script>
 <script src="//cdn.firebase.com/v0/firebase.js"></script>
 <script src="//cdn.firebase.com/js/simple-login/1.2.1/firebase-simple-login.js"></script>
-<script src="//cdn.firebase.com/libs/angularfire/0.7.1/angularfire.min.js"></script>
+<script src="//cdn.firebase.com/libs/angularfire/0.6.0/angularfire.min.js"></script>
 <script src="assets/js/base.js"></script>
 </body>
 </html>
