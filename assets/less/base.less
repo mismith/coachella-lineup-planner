@@ -42,14 +42,18 @@ nav {
 	text-align: right;
 	padding: @u;
 	
+	img {
+		margin-left: @u/2;
+	}
 	.btn {
-		margin-left: @u;
+		margin-left: @u/2;
 	}
 }
 
 .tablify {
 	display: table;
 	width: 100%;
+	margin: 0;
 	
 	> * {
 		display: table-cell;
@@ -63,17 +67,51 @@ nav {
 	}
 }
 
+th {
+	.sort-arrow {
+		display: inline-block;
+		width: 0;
+		height: 0;
+		border: 5px solid transparent;
+		border-top: 0;
+		border-bottom: 10px solid @light;
+		margin-left: @u/2;
+		
+		&.reverse {
+			border-top: 10px solid @light;
+			border-bottom: 0;
+		}
+	}
+	ul {
+		margin: -1px 0 !important;
+	}
+}
 td {
-	&.voters {
+	&.buttons {
+		vertical-align: middle !important;
+		padding: 0 !important;
+	}
+	&.voters,
+	&.mustseers {
 		vertical-align: middle !important;
 		padding: 0 !important;
 		
 		ul {
 			margin: 0;
+			
+			li {
+				display: inline-block;
+				margin-right: @u/2;
+			}
 		}
 	}
 	&.score {
 		font-size: 1.2em;
 		font-weight: bold;
+	}
+}
+ul {
+	&.list-unstyled {
+		margin: 0;
 	}
 }
