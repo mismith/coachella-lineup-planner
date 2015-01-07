@@ -233,14 +233,20 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			}
 		};
 		
+		$scope.filterDay   = 0;
 		$scope.orderBy     = undefined;
 		$scope.orderByStr  = undefined;
-		$scope.orderByDir  = undefined;
+		$scope.orderByDir  = false;
 		$scope.toggleOrder = function(key){
 			if($scope.orderByStr == key) $scope.orderByDir = ! $scope.orderByDir;
-			$scope.orderByStr = key;
+			else $scope.orderByDir = key == 'vote' || key == 'score';
+			
 			switch(key){
+				default:
+					$scope.orderByStr = key;
+					break;
 				case 'mustsee':
+					$scope.orderByStr = key;
 					key = function(item){
 						var length = 0;
 						if(item.mustsee){
@@ -249,6 +255,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 						return length;
 					};
 					break;
+/*
 				case 'votes':
 					key = function(item){
 						var length = 0;
@@ -258,7 +265,9 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 						return length;
 					};
 					break;
+*/
 				case 'vote':
+					$scope.orderByStr = key;
 					key = function(item){
 						var order = -2;
 						if(item.votes){
@@ -270,17 +279,23 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 					};
 					break;
 				case undefined:
-					$scope.orderBy = ['day','$id'];
+					$scope.orderBy    = ['day','$id'];
+					$scope.orderByStr = key;
 					$scope.orderByDir = false;
 					return;
 				case 'day':
-					$scope.orderBy = ['day','name'];
+					if($scope.orderByStr === key && $scope.orderByDir === false){
+						// already sorting by day DESC, so let's revert to default insteal
+						$scope.toggleOrder();
+						return;
+					}
+					$scope.orderByStr = key;
+					$scope.orderBy    = ['day','name'];
 					return;
 			}
 			$scope.orderBy = key;
 		};
 		$scope.toggleOrder();
-		$scope.filterDay = 0;
 	}])
 	.controller('BandCtrl', ["$scope", function($scope){
 		$scope.init = function(band){

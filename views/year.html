@@ -10,19 +10,20 @@
 			Band<span ng-show="orderByStr == 'name'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span>
 		</th>
 		<th ng-click="toggleOrder('vote')">My Vote<span ng-show="orderByStr == 'vote'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-		<th ng-click="toggleOrder('votes')">Voters<span ng-show="orderByStr == 'votes'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-		<th ng-click="toggleOrder('mustsee')">Must See<span ng-show="orderByStr == 'mustsee'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-		<th ng-click="toggleOrder('score')">Score<span ng-show="orderByStr == 'score'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
+		<th ng-click="toggleOrder('score')">Votes<span ng-show="orderByStr == 'score'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
+		<th ng-if="showMustSee" ng-click="toggleOrder('mustsee')">Must See<span ng-show="orderByStr == 'mustsee'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
 	</thead>
 	<tbody>
 		<tr ng-repeat="band in bands | orderBy:orderBy:orderByDir | filter:(filterDay ? {day:filterDay} : null)" ng-controller="BandCtrl" ng-init="init(band)">
 			<td ng-show=" ! filterDay">{{ band.day }}</td>
 			<td>{{ band.name }}</td>
 			<td class="buttons">
-				<button ng-click="vote(band.$id, -1)" class="btn btn-default btn-sm" ng-class="{'btn-danger':  $auth.user ? band.votes[$auth.user.uid].vote == -1 : false}">-1</button>
-				<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': $auth.user ? band.votes[$auth.user.uid].vote == 1 : false}">1</button>
-				<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $auth.user ? band.votes[$auth.user.uid].vote == 2 : false}">2</button>
-				<button ng-click="mustsee(band.$id)" class="btn btn-default btn-sm" ng-class="{'btn-info': $auth.user ? (band.mustsee[$auth.user.uid].mustsee !== undefined ? band.mustsee[$auth.user.uid].mustsee : band.mustsee[$auth.user.uid]) : false}"><i class="glyphicon glyphicon-star"></i></button>
+				<div class="btn-group">
+					<button ng-click="vote(band.$id, -1)" class="btn btn-default btn-sm" ng-class="{'btn-danger':  $auth.user ? band.votes[$auth.user.uid].vote == -1 : false}" title="Nope"><i class="glyphicon glyphicon-thumbs-down"></i></button>
+					<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': $auth.user ? band.votes[$auth.user.uid].vote == 1 : false}" title="Sure"><i class="glyphicon glyphicon-ok"></i></button>
+					<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $auth.user ? band.votes[$auth.user.uid].vote == 2 : false}" title="Definitely"><i class="glyphicon glyphicon-thumbs-up"></i></button>
+				</div>
+				<button ng-if="showMustSee" ng-click="mustsee(band.$id)" class="btn btn-default btn-sm" ng-class="{'btn-info': $auth.user ? (band.mustsee[$auth.user.uid].mustsee !== undefined ? band.mustsee[$auth.user.uid].mustsee : band.mustsee[$auth.user.uid]) : false}"><i class="glyphicon glyphicon-star"></i></button>
 			</td>
 			<td class="voters">
 				<ul class="list-unstyled">
@@ -33,7 +34,7 @@
 					</li>
 				</ul>
 			</td>
-			<td class="mustseers">
+			<td ng-if="showMustSee" class="mustseers">
 				<ul class="list-unstyled">
 					<li ng-repeat="(user_id, vote) in band.mustsee" ng-show="vote.mustsee !== undefined ? vote.mustsee : true">
 						<div class="btn btn-xs btn-info">
@@ -42,7 +43,6 @@
 					</li>
 				</ul>
 			</td>
-			<td class="score">{{ band.score }}</td>
 		</tr>
 	</tbody>
 </table>
