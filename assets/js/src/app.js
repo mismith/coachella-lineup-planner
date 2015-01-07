@@ -68,27 +68,6 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				save();
 			}
 		};
-		$scope.mustsee = function(band_id){
-			var save = function(){
-				var $item = $firebaseHelper.$child($scope.bands, band_id + '/mustsee/' + $scope.$auth.user.uid + '/mustsee')
-				$item.$asObject().$loaded().then(function(item){
-					if(item.$value){
-						$item.$set(false);
-					} else {
-						$item.$set(true);
-					}
-				});
-			}
-			if ( ! $scope.$auth.user){
-				$scope.$auth.$login('facebook').then(function(user){
-					save();
-				}, function(error){
-					console.error(error);
-				});
-			}else{
-				save();
-			}
-		};
 		
 		$scope.filterDay   = 0;
 		$scope.orderBy     = undefined;
@@ -117,26 +96,6 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			$scope.orderByStr = key;
 			
 			switch(key){
-				case 'mustsee':
-					key = function(item){
-						var length = 0;
-						if(item.mustsee){
-							for(var i in item.mustsee) length++;
-						}
-						return length;
-					};
-					break;
-/*
-				case 'votes':
-					key = function(item){
-						var length = 0;
-						if(item.votes){
-							for(var i in item.votes) length++;
-						}
-						return length;
-					};
-					break;
-*/
 				case 'vote':
 					key = function(item){
 						var order = -2;

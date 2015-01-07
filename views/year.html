@@ -11,7 +11,6 @@
 		</th>
 		<th ng-click="toggleOrder('vote')">My Vote<span ng-show="orderByStr == 'vote'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
 		<th ng-click="toggleOrder('score')">Votes<span ng-show="orderByStr == 'score'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-		<th ng-if="showMustSee" ng-click="toggleOrder('mustsee')">Must See<span ng-show="orderByStr == 'mustsee'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
 	</thead>
 	<tbody>
 		<tr ng-repeat="band in bands | orderBy:orderBy:orderByDir | filter:(filterDay ? {day:filterDay} : null)" ng-controller="BandCtrl" ng-init="init(band)">
@@ -23,22 +22,12 @@
 					<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': $auth.user ? band.votes[$auth.user.uid].vote == 1 : false}" title="Sure"><i class="glyphicon glyphicon-thumbs-up"></i></button>
 					<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $auth.user ? band.votes[$auth.user.uid].vote == 2 : false}" title="Definitely"><i class="glyphicon glyphicon-star"></i></button>
 				</div>
-				<button ng-if="showMustSee" ng-click="mustsee(band.$id)" class="btn btn-default btn-sm" ng-class="{'btn-info': $auth.user ? (band.mustsee[$auth.user.uid].mustsee !== undefined ? band.mustsee[$auth.user.uid].mustsee : band.mustsee[$auth.user.uid]) : false}"><i class="glyphicon glyphicon-star"></i></button>
 			</td>
 			<td class="voters">
 				<ul class="list-unstyled">
 					<li ng-repeat="(user_id, vote) in band.votes">
 						<div class="btn btn-xs" ng-class="{'btn-danger': vote.vote == -1, 'btn-warning': vote.vote == 1, 'btn-success': vote.vote == 2}">
-							<img ng-src="http://graph.facebook.com/{{ users[user_id].id }}/picture?type=square" width="24" height="24" title="{{ users[user_id].name }}" style="margin-left: -4px; margin-right: -4px;">
-						</div>
-					</li>
-				</ul>
-			</td>
-			<td ng-if="showMustSee" class="mustseers">
-				<ul class="list-unstyled">
-					<li ng-repeat="(user_id, vote) in band.mustsee" ng-show="vote.mustsee !== undefined ? vote.mustsee : true">
-						<div class="btn btn-xs btn-info">
-							<img ng-src="http://graph.facebook.com/{{ users[user_id].id }}/picture?type=square" width="24" height="24" title="{{ users[user_id].name }}" style="margin-left: -4px; margin-right: -4px;">
+							<img ng-src="http://graph.facebook.com/{{ users[user_id].id }}/picture?type=square" width="24" height="24" title="{{ users[user_id].displayName }}" style="margin-left: -4px; margin-right: -4px;">
 						</div>
 					</li>
 				</ul>
