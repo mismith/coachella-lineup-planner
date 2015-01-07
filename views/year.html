@@ -10,7 +10,7 @@
 			Band<span ng-show="orderByStr == 'name'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span>
 		</th>
 		<th ng-click="toggleOrder('vote')">My Vote<span ng-show="orderByStr == 'vote'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-		<th ng-click="toggleOrder('score')">Votes<span ng-show="orderByStr == 'score'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
+		<th ng-if="$auth.user" ng-click="toggleOrder('score')">Votes<span ng-show="orderByStr == 'score'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
 	</thead>
 	<tbody>
 		<tr ng-repeat="band in bands | orderBy:orderBy:orderByDir | filter:(filterDay ? {day:filterDay} : null)" ng-controller="BandCtrl" ng-init="init(band)">
@@ -23,7 +23,7 @@
 					<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $auth.user ? band.votes[$auth.user.uid].vote == 2 : false}" title="Definitely"><i class="glyphicon glyphicon-star"></i></button>
 				</div>
 			</td>
-			<td class="voters">
+			<td ng-if="$auth.user" class="voters">
 				<ul class="list-unstyled">
 					<li ng-repeat="(user_id, vote) in band.votes">
 						<div class="btn btn-xs" ng-class="{'btn-danger': vote.vote == -1, 'btn-warning': vote.vote == 1, 'btn-success': vote.vote == 2}">
