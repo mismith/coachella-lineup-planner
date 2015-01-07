@@ -1,6 +1,6 @@
 <table class="table" ng-controller="BandsCtrl">
 	<thead>
-		<th ng-show=" ! filterDay" ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
+		<th ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
 		<th ng-click="toggleOrder('name')">
 			<ul ng-click="$event.stopPropagation()" class="list-unstyled btn-group pull-right">
 				<li ng-repeat="(day_id, day) in ['All Days', 'Day 1', 'Day 2', 'Day 3']" ng-click="$parent.filterDay = day_id" class="btn btn-xs btn-default" ng-class="{'btn-primary': filterDay == day_id}">
@@ -14,7 +14,7 @@
 	</thead>
 	<tbody>
 		<tr ng-repeat="band in bands | orderBy:orderBy:orderByDir | filter:(filterDay ? {day:filterDay} : null)" ng-controller="BandCtrl" ng-init="init(band)">
-			<td ng-show=" ! filterDay">{{ band.day }}</td>
+			<td>{{ band.day }}</td>
 			<td>{{ band.name }}</td>
 			<td class="buttons">
 				<div class="btn-group">
