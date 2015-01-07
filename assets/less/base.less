@@ -1,5 +1,3 @@
-@import "css3.inc.less";
-
 /* variables */
 @darkest:  #000;
 @darker:   #333;
@@ -15,21 +13,8 @@
 @facebook: #3b5998;
 
 /* tags */
-* {
-	.box-sizing;
-}
-html,
-body {
-	//width: 100%;
-	//height: 100%;
-	padding: 0;
-	margin: 0;
-}
-body {
-	
-}
 img {
-	.border-radius(4px);
+	border-radius: 4px;
 	vertical-align: middle;
 	border: solid 1px @neutral;
 }
@@ -67,6 +52,12 @@ nav {
 	}
 }
 
+ul {
+	&.list-unstyled {
+		margin: 0;
+	}
+}
+
 th {
 	.sort-arrow {
 		display: inline-block;
@@ -91,8 +82,7 @@ td {
 		vertical-align: middle !important;
 		padding: 0 !important;
 	}
-	&.voters,
-	&.mustseers {
+	&.voters {
 		vertical-align: middle !important;
 		padding: 0 !important;
 		
@@ -105,13 +95,13 @@ td {
 			}
 		}
 	}
-	&.score {
-		font-size: 1.2em;
-		font-weight: bold;
-	}
 }
-ul {
-	&.list-unstyled {
-		margin: 0;
+.table {
+	th,
+	td {
+		&:nth-child(1),
+		&:nth-child(3) {
+			text-align: center;
+		}
 	}
 }
