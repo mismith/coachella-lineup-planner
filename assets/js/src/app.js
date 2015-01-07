@@ -1,9 +1,8 @@
 angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseHelper'])
 	
 	.config(function($locationProvider, $urlRouterProvider, $stateProvider){
-		$locationProvider.html5Mode(true);
 		$urlRouterProvider.when('',  '/');
-		$urlRouterProvider.when('/', '/2014');
+		$urlRouterProvider.when('/', '/2015'); // default to current year
 		$stateProvider
 			// pages
 			.state('year', {
