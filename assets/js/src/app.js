@@ -8,48 +8,61 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			.state('year', {
 				url: '/:year',
 				templateUrl: 'views/year.html',
+				resolve: {
+					bands: function($rootScope, $stateParams, $firebaseHelper){
+						$rootScope.bands = $firebaseHelper.$get('bands/' + $stateParams.year, true);
+						
+						return true;
+					},
+				},
 			})
-				.state('year:edit', {
-					url: '/:year/edit',
-					templateUrl: 'views/edit.html',
+				.state('year.group', {
+					url: '/:group',
 					resolve: {
-						isAdmin: function($rootScope, $q){
-							var deferred = $q.defer();
+						group: function($rootScope, $stateParams, $firebaseHelper){
+							$rootScope.group = $firebaseHelper.$get('groups/' + $stateParams.group);
 							
-							$rootScope.$auth.$getCurrentUser().then(function(user){
-								if(user && user.uid == 'facebook:120605287'){
-									deferred.resolve();
-								}else{
-									deferred.reject();
-								}
-							});
+							$rootScope.users = $firebaseHelper.$get('users'); // @TODO: only load those in group
 							
-							return deferred.promise;
+							return true;
 						},
 					},
-				});
+				})
+			.state('year:edit', {
+				url: '/:year/edit',
+				templateUrl: 'views/edit.html',
+				resolve: {
+					isAdmin: function($rootScope, $q){
+						var deferred = $q.defer();
+					
+						if($rootScope.$user.uid == 'facebook:120605287' /* Murray Smith */){
+							deferred.resolve();
+						}else{
+							deferred.reject();
+						}
+						
+						return deferred.promise;
+					},
+				},
+			});
 	})
 	
-	.controller('AppCtrl', function($rootScope, $state, $firebase, $firebaseHelper, $firebaseSimpleLogin){
+	.controller('AppCtrl', function($rootScope, $state, $firebase, $firebaseHelper, $firebaseAuth){
 		$firebaseHelper.namespace('coachellalp');
 		$rootScope.$state = $state;
-		$rootScope.$auth  = $firebaseSimpleLogin($firebaseHelper.$ref());
 		
-		$rootScope.$on('$firebaseSimpleLogin:login', function(e, user){
-			$firebaseHelper.$ref('users/' + user.uid).set(user);
-		});
-		
-		$rootScope.$on('$stateChangeSuccess', function(){
-			$rootScope.year = $rootScope.$state.params.year;
-			
-			$rootScope.bands = $firebaseHelper.$get('bands/' + $rootScope.year, true);
-			$rootScope.users = $firebaseHelper.$get('users');
+		$rootScope.$auth = $firebaseAuth($firebaseHelper.$ref());
+		$rootScope.$auth.$onAuth(function(authData){
+			$rootScope.$user = authData || {}
+			if(authData){
+				$firebaseHelper.$inst('users/' + authData.uid).$update(authData);
+			}
 		});
 	})
 	.controller('BandsCtrl', function($scope, $firebaseHelper){
 		$scope.vote = function(band_id, vote){
 			var save = function(){
-				var $item = $firebaseHelper.$child($scope.bands, band_id + '/votes/' + $scope.$auth.user.uid + '/vote')
+				var $item = $firebaseHelper.$child($scope.bands, band_id + '/votes/' + $scope.$user.uid + '/vote')
 				$item.$asObject().$loaded().then(function(item){
 					if(item.$value == vote){
 						$item.$remove();
@@ -58,8 +71,8 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 					}
 				});
 			}
-			if ( ! $scope.$auth.user){
-				$scope.$auth.$login('facebook').then(function(user){
+			if ( ! $scope.$user.uid){
+				$scope.$auth.$authWithOAuthPopup('facebook').then(function(){
 					save();
 				}, function(error){
 					console.error(error);
@@ -101,7 +114,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 						var order = -2;
 						if(item.votes){
 							angular.forEach(item.votes, function(vote, user_uid){
-								if(user_uid == $scope.$auth.user.uid) order = vote.vote;
+								if(user_uid == $scope.$user.uid) order = vote.vote;
 							});
 						}
 						return order;
@@ -118,6 +131,50 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			$scope.orderBy = key;
 		};
 		$scope.toggleOrder();
+		
+		
+		$scope.invite = function(){
+			$scope.$apply(function(){
+				FB.ui({
+					method: 'apprequests',
+					title: 'Coachella Friends',
+					message: 'Let\'s figure out which bands we all want to see this year.',
+				}, function(response){
+					if( ! response){
+						console.error('Facebook Error: Unknown');
+					}else if(response.error){
+						console.error('Facebook Error: ' + response.error);
+					}else{
+						if(response.to){
+							// build list of user uids
+							var uids = {};
+							uids[scope.$user.uid] = scope.$user.uid; // include self
+							angular.forEach(response.to, function(fbid){ // include invitees
+								var uid = 'facebook:' + fbid;
+								uids[uid] = uid;
+							});
+							console.log(uids);
+							
+							// update relations
+	/*
+							if(scope.group){
+								// group already exists, append new users
+								scope.group.$update({users: uids});
+							}else{
+								// create new group
+								$firebaseHelper.$get('groups', true).$add({year: $state.params.year, users: uids}).then(function(groupRef){
+									var groupId = groupRef.key();
+									$firebaseHelper.$inst('users/' + $rootScope.$user.uid + '/groups').$set(groupId, groupId).then(function(){
+										$state.go('year.group', {year: $state.params.year, group: groupId});
+									});
+								});
+							}
+	*/
+						}
+					}
+				});
+			});
+		}
 	})
 	.controller('BandCtrl', function($scope){
 		$scope.init = function(band){
@@ -136,7 +193,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			if(band && band.name && band.day){
 				$scope.bands.$add(band).then(function(){
 					// reset it
-					band.name    = '';
+					band.name = '';
 					
 					// focus on input so we can quickly add more
 					$scope.added = true;
@@ -157,7 +214,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				scope.$watch(function(){
 					return scope.$eval(attrs.ngAutofocus);
 				},function (v){
-					if(v) element[0].focus();//use focus function instead of autofocus attribute to avoid cross browser problem. And autofocus should only be used to mark an element to be focused when page loads.
+					if(v) element[0].focus(); // use focus function instead of autofocus attribute to avoid cross browser problem. And autofocus should only be used to mark an element to be focused when page loads.
 				});
 			}
 		};
