@@ -269,9 +269,17 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 						return order;
 					};
 					break;
+				case undefined:
+					$scope.orderBy = ['day','$id'];
+					$scope.orderByDir = false;
+					return;
+				case 'day':
+					$scope.orderBy = ['day','name'];
+					return;
 			}
 			$scope.orderBy = key;
 		};
+		$scope.toggleOrder();
 		$scope.filterDay = 0;
 	}])
 	.controller('BandCtrl', ["$scope", function($scope){
