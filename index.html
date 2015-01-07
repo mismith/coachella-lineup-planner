@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="coachella">
+<head>
+	<base href="/">
+	<meta charset="UTF-8">
+	
+	<meta name="viewport" content="width=640">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<link rel="apple-touch-icon-precomposed" href="assets/img/touchicon.png" type="image/png">
+	<link rel="shortcut icon" href="assets/img/touchicon.png" type="image/png">
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css">
+	<link rel="stylesheet" href="assets/css/base.css" type="text/css">
+	
+	<title>Coachella LP</title>
+	
+	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+<body ng-controller="AppCtrl">
+
+<div id="app">
+	<header class="navbar navbar-default tablify">
+		<h1>Coachella LP</h1>
+		<div>
+			<select ng-options="year as year for year in ['2014','2015']" ng-model="$root.year" ng-change="$state.go('year', {year: year})" class="form-control"></select>
+		</div>
+		<nav>
+			<div ng-show=" ! $auth.user">
+				<button ng-click="$auth.$login('facebook')" class="btn btn-facebook">Login with Facebook</button>
+			</div>
+			<div ng-show="$auth.user">
+				Logged in as <strong>{{ $auth.user.displayName }} <img ng-src="http://graph.facebook.com/{{ $auth.user.id }}/picture?type=square" width="34" height="34"></strong> <button ng-click="$auth.$logout()" class="btn btn-facebook">Logout</button>
+			</div>
+		</nav>
+	</header>
+	<ui-view autoscroll="false"></ui-view>
+</div>
+
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.4/angular.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.11/angular-ui-router.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.11.0/ui-bootstrap-tpls.min.js"></script>
+	
+	<script src="//cdn.firebase.com/js/client/1.0.15/firebase.js"></script>
+	<script src="//cdn.firebase.com/js/simple-login/1.6.4/firebase-simple-login.js"></script>
+	<script src="//cdn.firebase.com/libs/angularfire/0.8.2/angularfire.min.js"></script>
+	
+	<script src="assets/js/base.js"></script>
+</body>
+</html>
