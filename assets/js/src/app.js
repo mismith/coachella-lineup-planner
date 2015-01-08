@@ -2,31 +2,14 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 	
 	.config(function($locationProvider, $urlRouterProvider, $stateProvider){
 		$urlRouterProvider.when('',  '/');
-		$urlRouterProvider.when('/', '/2015'); // default to current year
 		$stateProvider
 			// pages
 			.state('year', {
 				url: '/:year',
 				templateUrl: 'views/year.html',
-				resolve: {
-					bands: function($rootScope, $stateParams, $firebaseHelper){
-						$rootScope.bands = $firebaseHelper.$get('bands/' + $stateParams.year, true);
-						
-						return true;
-					},
-				},
 			})
 				.state('year.group', {
 					url: '/:group',
-					resolve: {
-						group: function($rootScope, $stateParams, $firebaseHelper){
-							$rootScope.group = $firebaseHelper.$get('groups/' + $stateParams.year + '/' + $stateParams.group);
-							
-							$rootScope.users = $firebaseHelper.$get('users'); // @TODO: only load those in group
-							
-							return true;
-						},
-					},
 				})
 			.state('year:edit', {
 				url: '/:year/edit',
@@ -47,7 +30,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			});
 	})
 	
-	.controller('AppCtrl', function($scope, $rootScope, $state, $q, $firebaseHelper){
+	.controller('AppCtrl', function($rootScope, $state, $firebaseHelper){
 		$firebaseHelper.namespace('coachellalp');
 		$rootScope.$state = $state;
 		
@@ -58,22 +41,36 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				// logging in
 				$rootScope.$me = $firebaseHelper.$get('users/' + authData.uid); // fetch existing user profile
 				$rootScope.$me.$inst().$update(authData); // update it w/ any changes since last login
-				$rootScope.$me.$loaded().then(function(me){
-					// check if user is already in a group this year, and redirect there if so
-					if( ! $rootScope.group && me.groups && me.groups[$state.params.year]){
-						$state.go('year.group', {year: $state.params.year, group: me.groups[$state.params.year]});
-					}
-				});
 			}else{
 				// load/refresh while not logged in, or logging out
 			}
 		});
 		
-		
+		$rootScope.$on('$stateChangeSuccess', function(){
+			$state.params.year = $state.params.year || 2015; // default year
+			
+			$rootScope.bands = $firebaseHelper.$get('bands/' + $state.params.year, true);
+			
+			if($state.params.group){ // group is explicitly specified
+				$rootScope.group = $firebaseHelper.$get('groups/' + $state.params.year + '/' + $state.params.group);
+				
+				$rootScope.users = $firebaseHelper.$get('users'); // @TODO: only load those in group
+			}else{ // no group explicitly specified
+				$rootScope.$me.$loaded().then(function(me){
+					// check if user is already in a group this year, and redirect there if so
+					if(me.groups && me.groups[$state.params.year]){
+						$state.go('year.group', {group: me.groups[$state.params.year]});
+					}
+				});
+			}
+		})
+	})
+	.controller('GroupsCtrl', function($scope, $state, $q, $firebaseHelper){
 		$scope.userInGroup = function(user_id, group){
 			return group && group.users ? !! group.users[user_id] : false;
 		};
 		$scope.addUserToGroup = function(user_id, group_id, year){
+			// @TODO: what if user is already in a group?
 			return $q.all([
 				$firebaseHelper.$inst('users', user_id, 'groups').$set(year, group_id),
 				$firebaseHelper.$inst('groups', year, group_id, 'users').$set(user_id, user_id),
@@ -88,38 +85,39 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 		$scope.invite = function(){
 			FB.ui({
 				method: 'apprequests',
-				title: 'Coachella Friends',
+				title: 'Group Members',
 				message: 'Let\'s figure out which bands we all want to see this year.',
 			}, function(response){
 				if( ! response){
-					console.error('Facebook Error: Unknown');
+					console.error('Facebook Error: No Response');
 				}else if(response.error){
 					console.error('Facebook Error: ' + response.error);
 				}else{
 					if(response.to){
-						// add all invited users to group
-						response.to.push($scope.$me.facebook.id); // include self
-						angular.forEach(response.to, function(fbid){
-							var uid = 'facebook:' + fbid;
-							
-							$scope.addUserToGroup(uid, $scope.group.$id, $state.params.year);
-						});
-						
-						// update relations
-/*
-						if(scope.group){
-							// group already exists, append new users
-							scope.group.$update({users: uids});
-						}else{
-							// create new group
-							$firebaseHelper.$get('groups', true).$add({year: $state.params.year, users: uids}).then(function(groupRef){
-								var groupId = groupRef.key();
-								$firebaseHelper.$inst('users/' + $rootScope.$me.uid + '/groups').$set(groupId, groupId).then(function(){
-									$state.go('year.group', {year: $state.params.year, group: groupId});
+						var link = function(){
+							$scope.group.$loaded().then(function(){
+								// add all invited users to group
+								response.to.push($scope.$me.facebook.id); // include self
+								angular.forEach(response.to, function(fbid){
+									var uid = 'facebook:' + fbid;
+									
+									$scope.addUserToGroup(uid, $scope.group.$id, $state.params.year);
 								});
 							});
+						};
+						if( ! $scope.group){
+							// create a new group
+							$firebaseHelper.$get('groups', $state.params.year, true).$add().then(function(groupRef){
+								var group_id = groupRef.key();
+								$scope.group = $firebaseHelper.$get('groups', $state.params.year, group_id);
+								
+								link();
+								
+								$state.go('year.group', {group: group_id});
+							});
+						}else{
+							link();
 						}
-*/
 					}
 				}
 			});
@@ -241,3 +239,10 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			}
 		};
 	})
+	
+	
+	
+	// @TODO: get user name from facebook based on id somehow
+	// @TODO: security rules
+	// @TODO: fix voting saving
+	// @TODO: logout refresh

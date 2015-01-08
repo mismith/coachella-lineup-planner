@@ -22,11 +22,12 @@
 <div id="app">
 	<header class="navbar navbar-default tablify">
 		<h1 title="Coachella Lineup Planner">Coachella LP</h1>
-<!--
-		<div>
-			<select ng-options="year as year for year in ['2014','2015']" ng-model="$state.params.year" ng-change="$state.go('year', {year: year})" class="form-control"></select>
+		<div ng-show="year = $state.params.year">
+			<select ng-model="year" ng-change="$state.go('year', {year: year})" class="form-control">
+				<option>2014</option>
+				<option>2015</option>
+			</select>
 		</div>
--->
 		<nav>
 			<div ng-show=" ! $me.uid">
 				<button ng-click="$auth.$authWithOAuthPopup('facebook')" class="btn btn-facebook">Login with Facebook</button>
@@ -49,14 +50,13 @@
 	
 	<script src="assets/js/base.js"></script>
 	<script>
+		// Load FB SDK asynchronously
 		window.fbAsyncInit = function() {
 			FB.init({
 				appId:   '601345903279080',
 				version: 'v2.2'
 			});
 		};
-		
-		// Load the SDK asynchronously
 		(function(d, s, id) {
 			var js, fjs = d.getElementsByTagName(s)[0];
 			if (d.getElementById(id)) return;

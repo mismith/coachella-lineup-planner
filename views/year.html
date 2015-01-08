@@ -38,7 +38,7 @@
 			</tbody>
 		</table>
 	</div>
-	<aside id="sidebar" class="well well-sm">
+	<aside id="sidebar" ng-controller="GroupsCtrl" class="well well-sm">
 		<div ng-if="group">
 			<h3>Group Members</h3>
 			<ul class="list-unstyled">
@@ -47,15 +47,15 @@
 						<img ng-src="http://graph.facebook.com/{{ users[user_id].facebook.id }}/picture?type=square" width="32" height="32" title="{{ users[user_id].facebook.displayName }}" style="margin-left: -4px; margin-right: -4px;">
 					</div>
 					<span ng-bind="users[user_id].facebook.displayName"></span>
-					<button ng-click="removeUserFromGroup(user_id, group.$id, $state.params.year)" class="btn btn-xs btn-default">&times;</button>
+					<button ng-if="userInGroup($me.uid, group)" ng-click="removeUserFromGroup(user_id, group.$id, $state.params.year)" class="btn btn-xs btn-default">&times;</button>
 				</li>
-				<li ng-show="userInGroup($me.uid, group)">
+				<li ng-if="userInGroup($me.uid, group)">
 					<button ng-click="invite()" class="btn btn-info">Add Friends</button>
 				</li>
 			</ul>
 		</div>
 		<div ng-if=" ! group">
-			<p>Who else is going with you this year? Invite them so you can compare which bands you all want to see.</p>
+			<p>Who else is going with you this year? Add them to your group so you can tally which bands you all want to see.</p>
 			<button ng-click="invite()" class="btn btn-info">Add Friends</button>
 		</div>
 	</aside>
