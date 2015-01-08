@@ -57,6 +57,17 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				// page loaded or refreshed while not logged in, or logging out
 			}
 		});
+		$rootScope.$authThen = function(callback){
+			if ( ! $rootScope.$me.uid){
+				$rootScope.$auth.$authWithOAuthPopup('facebook').then(function(authData){
+					callback(authData.uid);
+				}, function(error){
+					console.error(error);
+				});
+			}else{
+				callback();
+			}
+		};
 		
 		$rootScope.$on('$stateChangeSuccess', function(){
 			$state.params.year = $state.params.year || 2015; // default year
@@ -94,50 +105,52 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			}
 		};
 		$scope.invite = function(){
-			FB.ui({
-				method: 'apprequests',
-				title: 'Group Members',
-				message: 'Let\'s figure out which bands we all want to see this year.',
-			}, function(response){
-				if( ! response){
-					console.error('Facebook Error: No Response');
-				}else if(response.error){
-					console.error('Facebook Error: ' + response.error);
-				}else{
-					if(response.to){
-						var link = function(){
-							$scope.group.$loaded().then(function(){
-								// add all invited users to group
-								response.to.push($scope.$me.facebook.id); // include self
-								angular.forEach(response.to, function(fbid){
-									var uid = 'facebook:' + fbid;
-									
-									$scope.addUserToGroup(uid, $scope.group.$id, $state.params.year);
+			$scope.$authThen(function(){
+				FB.ui({
+					method: 'apprequests',
+					title: 'Group Members',
+					message: 'Let\'s figure out which bands we all want to see this year.',
+				}, function(response){
+					if( ! response){
+						console.error('Facebook Error: No Response');
+					}else if(response.error){
+						console.error('Facebook Error: ' + response.error);
+					}else{
+						if(response.to){
+							var link = function(){
+								$scope.group.$loaded().then(function(){
+									// add all invited users to group
+									response.to.push($scope.$me.facebook.id); // include self
+									angular.forEach(response.to, function(fbid){
+										var uid = 'facebook:' + fbid;
+										
+										$scope.addUserToGroup(uid, $scope.group.$id, $state.params.year);
+									});
 								});
-							});
-						};
-						if( ! $scope.group){
-							// create a new group
-							$firebaseHelper.$get('groups', $state.params.year, true).$add().then(function(groupRef){
-								var group_id = groupRef.key();
-								$scope.group = $firebaseHelper.$get('groups', $state.params.year, group_id);
-								
+							};
+							if( ! $scope.group){
+								// create a new group
+								$firebaseHelper.$get('groups', $state.params.year, true).$add().then(function(groupRef){
+									var group_id = groupRef.key();
+									$scope.group = $firebaseHelper.$get('groups', $state.params.year, group_id);
+									
+									link();
+									
+									$state.go('year.group', {group: group_id});
+								});
+							}else{
 								link();
-								
-								$state.go('year.group', {group: group_id});
-							});
-						}else{
-							link();
+							}
 						}
 					}
-				}
+				});
 			});
 		}
 	})
 	.controller('BandsCtrl', function($scope, $firebaseHelper){
 		$scope.vote = function(band_id, vote){
-			var save = function(user_id){
-				var $item = $firebaseHelper.$child($scope.bands, band_id + '/votes/' + (user_id || $scope.$me.uid) + '/vote')
+			$scope.$authThen(function(uid){
+				var $item = $firebaseHelper.$child($scope.bands, band_id + '/votes/' + (uid || $scope.$me.uid) + '/vote')
 				$item.$asObject().$loaded().then(function(item){
 					if(item.$value == vote){
 						$item.$remove();
@@ -145,16 +158,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 						$item.$set(vote);
 					}
 				});
-			}
-			if ( ! $scope.$me.uid){
-				$scope.$auth.$authWithOAuthPopup('facebook').then(function(authData){
-					save(authData.uid);
-				}, function(error){
-					console.error(error);
-				});
-			}else{
-				save();
-			}
+			});
 		};
 		
 		$scope.filterDay   = 0;
