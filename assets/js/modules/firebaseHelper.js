@@ -1,6 +1,6 @@
 angular.module('firebaseHelper', ['firebase'])
 
-	.service('$firebaseHelper', ['$firebase', '$q', function($firebase, $q){
+	.service('$firebaseHelper', ['$firebase', '$firebaseAuth', '$q', function($firebase, $firebaseAuth, $q){
 		var self      = this,
 			namespace = '',
 			cached    = {};
@@ -9,6 +9,15 @@ angular.module('firebaseHelper', ['firebase'])
 		self.namespace = function(set){
 			if(set !== undefined) namespace = set;
 			return namespace;
+		};
+		
+		// $firebaseAuth wrapper
+		self.$auth = function(ref){
+			if( ! ref) ref = self.$ref(); // empty, use root by default
+			else if(angular.isString(ref)) ref = self.$ref(ref); // string/path
+			else if(angular.isFunction(ref.$ref)) ref = ref.$ref; // Instance
+			
+			return $firebaseAuth(ref);
 		};
 		
 		// returns: Reference

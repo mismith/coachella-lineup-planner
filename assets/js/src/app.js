@@ -47,12 +47,12 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			});
 	})
 	
-	.controller('AppCtrl', function($rootScope, $state, $firebase, $firebaseHelper, $firebaseAuth){
+	.controller('AppCtrl', function($scope, $rootScope, $state, $q, $firebaseHelper){
 		$firebaseHelper.namespace('coachellalp');
 		$rootScope.$state = $state;
 		
 		$rootScope.$me = {};
-		$rootScope.$auth = $firebaseAuth($firebaseHelper.$ref());
+		$rootScope.$auth = $firebaseHelper.$auth();
 		$rootScope.$auth.$onAuth(function(authData){
 			if(authData){
 				// logging in
