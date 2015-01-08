@@ -68,6 +68,8 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				
 				$rootScope.users = $firebaseHelper.$get('users'); // @TODO: only load those in group
 			}else{ // no group explicitly specified
+				$rootScope.group = $rootScope.users = undefined;
+				
 				refreshAuthState();
 			}
 		})
