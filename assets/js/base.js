@@ -1,6 +1,6 @@
 angular.module('firebaseHelper', ['firebase'])
 
-	.service('$firebaseHelper', ['$firebase', '$q', function($firebase, $q){
+	.service('$firebaseHelper', ['$firebase', '$firebaseAuth', '$q', function($firebase, $firebaseAuth, $q){
 		var self      = this,
 			namespace = '',
 			cached    = {};
@@ -9,6 +9,15 @@ angular.module('firebaseHelper', ['firebase'])
 		self.namespace = function(set){
 			if(set !== undefined) namespace = set;
 			return namespace;
+		};
+		
+		// $firebaseAuth wrapper
+		self.$auth = function(ref){
+			if( ! ref) ref = self.$ref(); // empty, use root by default
+			else if(angular.isString(ref)) ref = self.$ref(ref); // string/path
+			else if(angular.isFunction(ref.$ref)) ref = ref.$ref; // Instance
+			
+			return $firebaseAuth(ref);
 		};
 		
 		// returns: Reference
@@ -190,12 +199,12 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			});
 	}])
 	
-	.controller('AppCtrl', ["$rootScope", "$state", "$firebase", "$firebaseHelper", "$firebaseAuth", function($rootScope, $state, $firebase, $firebaseHelper, $firebaseAuth){
+	.controller('AppCtrl', ["$scope", "$rootScope", "$state", "$q", "$firebaseHelper", function($scope, $rootScope, $state, $q, $firebaseHelper){
 		$firebaseHelper.namespace('coachellalp');
 		$rootScope.$state = $state;
 		
 		$rootScope.$me = {};
-		$rootScope.$auth = $firebaseAuth($firebaseHelper.$ref());
+		$rootScope.$auth = $firebaseHelper.$auth();
 		$rootScope.$auth.$onAuth(function(authData){
 			if(authData){
 				// logging in
@@ -211,6 +220,62 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				// load/refresh while not logged in, or logging out
 			}
 		});
+		
+		
+		$scope.userInGroup = function(user_id, group){
+			return group && group.users ? !! group.users[user_id] : false;
+		};
+		$scope.addUserToGroup = function(user_id, group_id, year){
+			return $q.all([
+				$firebaseHelper.$inst('users', user_id, 'groups').$set(year, group_id),
+				$firebaseHelper.$inst('groups', year, group_id, 'users').$set(user_id, user_id),
+			]);
+		};
+		$scope.removeUserFromGroup = function(user_id, group_id, year){
+			return $q.all([
+				$firebaseHelper.$inst('users', user_id, 'groups').$remove(year),
+				$firebaseHelper.$inst('groups', year, group_id, 'users').$remove(user_id),
+			]);
+		};
+		$scope.invite = function(){
+			FB.ui({
+				method: 'apprequests',
+				title: 'Coachella Friends',
+				message: 'Let\'s figure out which bands we all want to see this year.',
+			}, function(response){
+				if( ! response){
+					console.error('Facebook Error: Unknown');
+				}else if(response.error){
+					console.error('Facebook Error: ' + response.error);
+				}else{
+					if(response.to){
+						// add all invited users to group
+						response.to.push($scope.$me.facebook.id); // include self
+						angular.forEach(response.to, function(fbid){
+							var uid = 'facebook:' + fbid;
+							
+							$scope.addUserToGroup(uid, $scope.group.$id, $state.params.year);
+						});
+						
+						// update relations
+/*
+						if(scope.group){
+							// group already exists, append new users
+							scope.group.$update({users: uids});
+						}else{
+							// create new group
+							$firebaseHelper.$get('groups', true).$add({year: $state.params.year, users: uids}).then(function(groupRef){
+								var groupId = groupRef.key();
+								$firebaseHelper.$inst('users/' + $rootScope.$me.uid + '/groups').$set(groupId, groupId).then(function(){
+									$state.go('year.group', {year: $state.params.year, group: groupId});
+								});
+							});
+						}
+*/
+					}
+				}
+			});
+		}
 	}])
 	.controller('BandsCtrl', ["$scope", "$firebaseHelper", function($scope, $firebaseHelper){
 		$scope.vote = function(band_id, vote){
@@ -284,50 +349,6 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			$scope.orderBy = key;
 		};
 		$scope.toggleOrder();
-		
-		
-		$scope.invite = function(){
-			$scope.$apply(function(){
-				FB.ui({
-					method: 'apprequests',
-					title: 'Coachella Friends',
-					message: 'Let\'s figure out which bands we all want to see this year.',
-				}, function(response){
-					if( ! response){
-						console.error('Facebook Error: Unknown');
-					}else if(response.error){
-						console.error('Facebook Error: ' + response.error);
-					}else{
-						if(response.to){
-							// build list of user uids
-							var uids = {};
-							uids[scope.$me.uid] = scope.$me.uid; // include self
-							angular.forEach(response.to, function(fbid){ // include invitees
-								var uid = 'facebook:' + fbid;
-								uids[uid] = uid;
-							});
-							console.log(uids);
-							
-							// update relations
-	/*
-							if(scope.group){
-								// group already exists, append new users
-								scope.group.$update({users: uids});
-							}else{
-								// create new group
-								$firebaseHelper.$get('groups', true).$add({year: $state.params.year, users: uids}).then(function(groupRef){
-									var groupId = groupRef.key();
-									$firebaseHelper.$inst('users/' + $rootScope.$me.uid + '/groups').$set(groupId, groupId).then(function(){
-										$state.go('year.group', {year: $state.params.year, group: groupId});
-									});
-								});
-							}
-	*/
-						}
-					}
-				});
-			});
-		}
 	}])
 	.controller('BandCtrl', ["$scope", function($scope){
 		$scope.init = function(band){
