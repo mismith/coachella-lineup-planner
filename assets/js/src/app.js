@@ -53,6 +53,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				$rootScope.$me.$inst().$update(authData); // update it w/ any changes since last login
 				refreshAuthState();
 			}else{
+				$rootScope.$me = {};
 				// page loaded or refreshed while not logged in, or logging out
 			}
 		});
@@ -248,6 +249,5 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 	
 	
 	
-	// @TODO: get user name from facebook based on id somehow
+	// @TODO: get user name from facebook based on id somehow / reimplement user inviting based on emails instead?
 	// @TODO: security rules
-	// @TODO: logout refresh
