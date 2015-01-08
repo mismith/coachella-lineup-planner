@@ -20,9 +20,9 @@
 					<td>{{ band.name }}</td>
 					<td class="buttons">
 						<div class="btn-group">
-							<button ng-click="vote(band.$id, -1)" class="btn btn-default btn-sm" ng-class="{'btn-danger':  $user.uid ? band.votes[$user.uid].vote == -1 : false}" title="Nope"><i class="glyphicon glyphicon-thumbs-down"></i></button>
-							<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': $user.uid ? band.votes[$user.uid].vote == 1 : false}" title="Sure"><i class="glyphicon glyphicon-thumbs-up"></i></button>
-							<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $user.uid ? band.votes[$user.uid].vote == 2 : false}" title="Definitely"><i class="glyphicon glyphicon-star"></i></button>
+							<button ng-click="vote(band.$id, -1)" class="btn btn-default btn-sm" ng-class="{'btn-danger':  $me.uid ? band.votes[$me.uid].vote == -1 : false}" title="Nope"><i class="glyphicon glyphicon-thumbs-down"></i></button>
+							<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': $me.uid ? band.votes[$me.uid].vote == 1 : false}" title="Sure"><i class="glyphicon glyphicon-thumbs-up"></i></button>
+							<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $me.uid ? band.votes[$me.uid].vote == 2 : false}" title="Definitely"><i class="glyphicon glyphicon-star"></i></button>
 						</div>
 					</td>
 					<td ng-if="group" class="voters">

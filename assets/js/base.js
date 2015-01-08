@@ -107,7 +107,7 @@ angular.module('firebaseHelper', ['firebase'])
 			
 			// watch for additions/deletions at keysRef
 			keysRef.on('child_added', function(snapshot){
-				var $item = self.$get(values, snapshot.name());
+				var $item = self.$get(values, snapshot.key());
 				
 				$item.$loaded().then(function(){
 					var deferreds = [];
@@ -119,7 +119,7 @@ angular.module('firebaseHelper', ['firebase'])
 				});
 			});
 			keysRef.on('child_removed', function(snapshot){
-				array.splice($rootScope.childById(array, snapshot.name(), undefined, true), 1);
+				array.splice($rootScope.childById(array, snapshot.key(), undefined, true), 1);
 			});
 			return array;
 		};
@@ -163,7 +163,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 					url: '/:group',
 					resolve: {
 						group: ["$rootScope", "$stateParams", "$firebaseHelper", function($rootScope, $stateParams, $firebaseHelper){
-							$rootScope.group = $firebaseHelper.$get('groups/' + $stateParams.group);
+							$rootScope.group = $firebaseHelper.$get('groups/' + $stateParams.year + '/' + $stateParams.group);
 							
 							$rootScope.users = $firebaseHelper.$get('users'); // @TODO: only load those in group
 							
@@ -175,10 +175,10 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				url: '/:year/edit',
 				templateUrl: 'views/edit.html',
 				resolve: {
-					isAdmin: ["$rootScope", "$q", function($rootScope, $q){
+					authorization: ["$rootScope", "$q", function($rootScope, $q){
 						var deferred = $q.defer();
 					
-						if($rootScope.$user.uid == 'facebook:120605287' /* Murray Smith */){
+						if($rootScope.$me.uid == 'facebook:120605287' /* Murray Smith */){
 							deferred.resolve();
 						}else{
 							deferred.reject();
@@ -194,18 +194,28 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 		$firebaseHelper.namespace('coachellalp');
 		$rootScope.$state = $state;
 		
+		$rootScope.$me = {};
 		$rootScope.$auth = $firebaseAuth($firebaseHelper.$ref());
 		$rootScope.$auth.$onAuth(function(authData){
-			$rootScope.$user = authData || {}
 			if(authData){
-				$firebaseHelper.$inst('users/' + authData.uid).$update(authData);
+				// logging in
+				$rootScope.$me = $firebaseHelper.$get('users/' + authData.uid); // fetch existing user profile
+				$rootScope.$me.$inst().$update(authData); // update it w/ any changes since last login
+				$rootScope.$me.$loaded().then(function(me){
+					// check if user is already in a group this year, and redirect there if so
+					if( ! $rootScope.group && me.groups && me.groups[$state.params.year]){
+						$state.go('year.group', {year: $state.params.year, group: me.groups[$state.params.year]});
+					}
+				});
+			}else{
+				// load/refresh while not logged in, or logging out
 			}
 		});
 	}])
 	.controller('BandsCtrl', ["$scope", "$firebaseHelper", function($scope, $firebaseHelper){
 		$scope.vote = function(band_id, vote){
-			var save = function(){
-				var $item = $firebaseHelper.$child($scope.bands, band_id + '/votes/' + $scope.$user.uid + '/vote')
+			var save = function(user_id){
+				var $item = $firebaseHelper.$child($scope.bands, band_id + '/votes/' + (user_id || $scope.$me.uid) + '/vote')
 				$item.$asObject().$loaded().then(function(item){
 					if(item.$value == vote){
 						$item.$remove();
@@ -214,9 +224,9 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 					}
 				});
 			}
-			if ( ! $scope.$user.uid){
-				$scope.$auth.$authWithOAuthPopup('facebook').then(function(){
-					save();
+			if ( ! $scope.$me.uid){
+				$scope.$auth.$authWithOAuthPopup('facebook').then(function(authData){
+					save(authData.uid);
 				}, function(error){
 					console.error(error);
 				});
@@ -257,7 +267,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 						var order = -2;
 						if(item.votes){
 							angular.forEach(item.votes, function(vote, user_uid){
-								if(user_uid == $scope.$user.uid) order = vote.vote;
+								if(user_uid == $scope.$me.uid) order = vote.vote;
 							});
 						}
 						return order;
@@ -291,7 +301,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 						if(response.to){
 							// build list of user uids
 							var uids = {};
-							uids[scope.$user.uid] = scope.$user.uid; // include self
+							uids[scope.$me.uid] = scope.$me.uid; // include self
 							angular.forEach(response.to, function(fbid){ // include invitees
 								var uid = 'facebook:' + fbid;
 								uids[uid] = uid;
@@ -307,7 +317,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 								// create new group
 								$firebaseHelper.$get('groups', true).$add({year: $state.params.year, users: uids}).then(function(groupRef){
 									var groupId = groupRef.key();
-									$firebaseHelper.$inst('users/' + $rootScope.$user.uid + '/groups').$set(groupId, groupId).then(function(){
+									$firebaseHelper.$inst('users/' + $rootScope.$me.uid + '/groups').$set(groupId, groupId).then(function(){
 										$state.go('year.group', {year: $state.params.year, group: groupId});
 									});
 								});

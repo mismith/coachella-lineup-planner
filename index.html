@@ -28,11 +28,11 @@
 		</div>
 -->
 		<nav>
-			<div ng-show=" ! $user.uid">
+			<div ng-show=" ! $me.uid">
 				<button ng-click="$auth.$authWithOAuthPopup('facebook')" class="btn btn-facebook">Login with Facebook</button>
 			</div>
-			<div ng-show="$user.uid">
-				Logged in as <strong><span ng-bind="$user.facebook.displayName"></span> <img ng-src="http://graph.facebook.com/{{ $user.facebook.id }}/picture?type=square" width="34" height="34"></strong> <button ng-click="$auth.$unauth()" class="btn btn-facebook">Logout</button>
+			<div ng-show="$me.uid">
+				Logged in as <strong><span ng-bind="$me.facebook.displayName"></span> <img ng-src="http://graph.facebook.com/{{ $me.facebook.id }}/picture?type=square" width="34" height="34"></strong> <button ng-click="$auth.$unauth()" class="btn btn-facebook">Logout</button>
 			</div>
 		</nav>
 	</header>
