@@ -107,7 +107,7 @@ angular.module('firebaseHelper', ['firebase'])
 			
 			// watch for additions/deletions at keysRef
 			keysRef.on('child_added', function(snapshot){
-				var $item = self.$get(values, snapshot.name());
+				var $item = self.$get(values, snapshot.key());
 				
 				$item.$loaded().then(function(){
 					var deferreds = [];
@@ -119,7 +119,7 @@ angular.module('firebaseHelper', ['firebase'])
 				});
 			});
 			keysRef.on('child_removed', function(snapshot){
-				array.splice($rootScope.childById(array, snapshot.name(), undefined, true), 1);
+				array.splice($rootScope.childById(array, snapshot.key(), undefined, true), 1);
 			});
 			return array;
 		};
