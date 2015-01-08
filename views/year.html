@@ -50,6 +50,7 @@
 					<button ng-if="userInGroup($me.uid, group)" ng-click="removeUserFromGroup(user_id, group.$id, $state.params.year, $event.shiftKey)" class="btn btn-xs btn-default">&times;</button>
 				</li>
 				<li ng-if="userInGroup($me.uid, group)">
+					<br>
 					<button ng-click="invite()" class="btn btn-info">Add Friends</button>
 				</li>
 			</ul>
