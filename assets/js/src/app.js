@@ -34,6 +34,16 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 		$firebaseHelper.namespace('coachellalp');
 		$rootScope.$state = $state;
 		
+		var refreshAuthState = function(){
+			if( ! $rootScope.$me || ! $rootScope.$me.$loaded) return;
+			
+			$rootScope.$me.$loaded().then(function(me){
+				// check if user is already in a group this year, and redirect there if so
+				if($state.params.year && me.groups && me.groups[$state.params.year]){
+					$state.go('year.group', {year: $state.params.year, group: me.groups[$state.params.year]});
+				}
+			});
+		};
 		$rootScope.$me = {};
 		$rootScope.$auth = $firebaseHelper.$auth();
 		$rootScope.$auth.$onAuth(function(authData){
@@ -41,8 +51,9 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				// logging in
 				$rootScope.$me = $firebaseHelper.$get('users/' + authData.uid); // fetch existing user profile
 				$rootScope.$me.$inst().$update(authData); // update it w/ any changes since last login
+				refreshAuthState();
 			}else{
-				// load/refresh while not logged in, or logging out
+				// page loaded or refreshed while not logged in, or logging out
 			}
 		});
 		
@@ -56,12 +67,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				
 				$rootScope.users = $firebaseHelper.$get('users'); // @TODO: only load those in group
 			}else{ // no group explicitly specified
-				$rootScope.$me.$loaded().then(function(me){
-					// check if user is already in a group this year, and redirect there if so
-					if(me.groups && me.groups[$state.params.year]){
-						$state.go('year.group', {group: me.groups[$state.params.year]});
-					}
-				});
+				refreshAuthState();
 			}
 		})
 	})
@@ -244,5 +250,4 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 	
 	// @TODO: get user name from facebook based on id somehow
 	// @TODO: security rules
-	// @TODO: fix voting saving
 	// @TODO: logout refresh
