@@ -237,11 +237,13 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				$firebaseHelper.$inst('groups', year, group_id, 'users').$set(user_id, user_id),
 			]);
 		};
-		$scope.removeUserFromGroup = function(user_id, group_id, year){
-			return $q.all([
-				$firebaseHelper.$inst('users', user_id, 'groups').$remove(year),
-				$firebaseHelper.$inst('groups', year, group_id, 'users').$remove(user_id),
-			]);
+		$scope.removeUserFromGroup = function(user_id, group_id, year, skipConfirm){
+			if(skipConfirm || confirm('Are you sure you want to remove this user from this group?')){
+				return $q.all([
+					$firebaseHelper.$inst('users', user_id, 'groups').$remove(year),
+					$firebaseHelper.$inst('groups', year, group_id, 'users').$remove(user_id),
+				]);
+			}
 		};
 		$scope.invite = function(){
 			FB.ui({
