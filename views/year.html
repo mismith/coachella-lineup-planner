@@ -1,5 +1,5 @@
 <div class="tablify">
-	<div>
+	<div id="table">
 		<table class="table" ng-controller="BandsCtrl">
 			<thead>
 				<th ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
@@ -27,9 +27,9 @@
 					</td>
 					<td ng-if="group" class="voters">
 						<ul class="list-unstyled">
-							<li ng-repeat="(user_id, vote) in band.votes">
+							<li ng-repeat="vote in band.votes | filterVotesByGroup:group">
 								<div class="btn btn-xs" ng-class="{'btn-danger': vote.vote == -1, 'btn-warning': vote.vote == 1, 'btn-success': vote.vote == 2}">
-									<img ng-src="http://graph.facebook.com/{{ users[user_id].facebook.id }}/picture?type=square" width="24" height="24" title="{{ users[user_id].facebook.displayName }}" style="margin-left: -4px; margin-right: -4px;">
+									<img ng-src="http://graph.facebook.com/{{ vote.$user.facebook.id }}/picture?type=square" width="24" height="24" title="{{ vote.$user.facebook.displayName }}" style="margin-left: -4px; margin-right: -4px;">
 								</div>
 							</li>
 						</ul>
@@ -41,26 +41,39 @@
 	<aside id="sidebar" ng-controller="GroupsCtrl" class="well well-sm">
 		<div ng-if="group">
 			<h3>Group Members</h3>
-			<ul class="list-unstyled">
-				<li ng-repeat="user_id in group.users">
-					<div class="btn btn-xs">
-						<img ng-src="http://graph.facebook.com/{{ users[user_id].facebook.id }}/picture?type=square" width="32" height="32" title="{{ users[user_id].facebook.displayName }}" style="margin-left: -4px; margin-right: -4px;">
+			<ul class="list-group">
+				<li ng-repeat="user in users | orderBy:'facebook.displayName'" class="list-group-item">
+					<div class="tablify">
+						<span>
+							<img ng-src="http://graph.facebook.com/{{ user.facebook.id }}/picture?type=square" width="32" height="32" title="{{ user.facebook.displayName }}">
+						</span>
+						<span ng-bind="user.facebook.displayName"></span>
+						<span>
+							<button ng-if="userInGroup($me.uid, group)" ng-click="removeUserFromGroup(user.$id, group.$id, $state.params.year, $event.shiftKey)" class="btn btn-xs btn-close">&times;</button>
+						</span>
 					</div>
-					<span ng-bind="users[user_id].facebook.displayName"></span>
-					<button ng-if="userInGroup($me.uid, group)" ng-click="removeUserFromGroup(user_id, group.$id, $state.params.year, $event.shiftKey)" class="btn btn-xs btn-default">&times;</button>
-				</li>
-				<li ng-if="userInGroup($me.uid, group)">
-					<br>
-					<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
 				</li>
 			</ul>
+			<footer ng-if="userInGroup($me.uid, group)">
+				<button ng-click="invite(group)" class="btn btn-primary">Add Friends</button>
+			</footer>
 			<aside ng-if=" ! userInGroup($me.uid, group)">
-				<br>
-				<br>
 				<hr>
 				<h3>Create Group</h3>
-				<p>You're currently looking at someone else's group. Do you want to make a group with your own friends?</p>
-				<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
+				<div ng-if="$me.uid">
+					<div ng-if="$me.$defaultGroup">
+						<p>You're currently looking at someone else's group. Do you want to go to the group with your own friends?</p>
+						<a ui-sref="year.group({year: $state.params.year, group: $me.$defaultGroup})" class="btn btn-primary">View My Group</a>
+					</div>
+					<div ng-if=" ! $me.$defaultGroup">
+						<p>You're currently looking at someone else's group. Do you want to make a group with your own friends?</p>
+						<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
+					</div>
+				</div>
+				<div ng-if=" ! $me.uid">
+					<p>Are you a part of this group? Do you want to make a group with your own friends? Login to compare your picks.</p>
+					<button ng-click="$auth.$authWithOAuthPopup('facebook')" class="btn btn-social btn-facebook"><i class="fa fa-facebook"></i> Login with Facebook</button>
+				</div>
 			</aside>
 		</div>
 		<div ng-if=" ! group">

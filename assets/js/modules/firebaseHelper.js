@@ -128,7 +128,14 @@ angular.module('firebaseHelper', ['firebase'])
 				});
 			});
 			keysRef.on('child_removed', function(snapshot){
-				array.splice($rootScope.childById(array, snapshot.key(), undefined, true), 1);
+				var i = -1,
+					$id = snapshot.key();
+				
+				angular.forEach(array, function(item, j){
+					if(i >= 0) return;
+					if(item.$id == $id) i = j;
+				});
+				if(i >= 0) array.splice(i, 1);
 			});
 			return array;
 		};

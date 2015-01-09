@@ -46,15 +46,65 @@ nav {
 	}
 }
 .btn {
+	&.btn-social{
+		position:relative;
+		padding-left:44px;
+		text-align:left;
+		white-space:nowrap;
+		overflow:hidden;
+		text-overflow:ellipsis;
+		
+		>:first-child {
+			position:absolute;
+			left:0;
+			top:0;
+			bottom:0;
+			width:32px;
+			line-height:34px;
+			font-size:1.4em;
+			text-align:center;
+			border-right:1px solid rgba(0,0,0,0.2);
+		}
+	}
 	&.btn-facebook {
 		background-color: @facebook;
 		color: #FFF;
+	}
+	&.btn-close {
+		display: inline-block;
+		width: 16px;
+		height: 16px;
+		line-height: 14px;
+		background: rgba(0,0,0,.1);
+		text-align: center;
+		vertical-align: middle;
+		padding: 0;
+		border-radius: 100%;
+		
+		&:hover {
+			background: rgba(0,0,0,.2);
+		}
 	}
 }
 
 ul {
 	&.list-unstyled {
 		margin: 0;
+	}
+	&.list-group {
+		> .list-group-item {
+			.tablify {
+				> * {
+					padding-left: @u;
+					
+					&:first-child,
+					&:last-child {
+						width: 1%;
+						padding-left: 0;
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -108,7 +158,9 @@ td {
 	}
 }
 
-
+#table {
+	vertical-align: top;
+}
 #sidebar {
 	width: 20%;
 	vertical-align: top;

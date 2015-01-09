@@ -13,6 +13,7 @@
 	<link rel="apple-touch-icon-precomposed" href="assets/img/touchicon.png" type="image/png">
 	<link rel="shortcut icon" href="assets/img/touchicon.png" type="image/png">
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css">
+	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" type="text/css">
 	<link rel="stylesheet" href="assets/css/base.css" type="text/css">
 	
 	<!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
@@ -30,7 +31,7 @@
 		</div>
 		<nav>
 			<div ng-show=" ! $me.uid">
-				<button ng-click="$auth.$authWithOAuthPopup('facebook')" class="btn btn-facebook">Login with Facebook</button>
+				<button ng-click="$auth.$authWithOAuthPopup('facebook')" class="btn btn-social btn-facebook"><i class="fa fa-facebook"></i> Login with Facebook</button>
 			</div>
 			<div ng-show="$me.uid">
 				Logged in as <strong><span ng-bind="$me.facebook.displayName"></span> <img ng-src="http://graph.facebook.com/{{ $me.facebook.id }}/picture?type=square" width="34" height="34"></strong> <button ng-click="$auth.$unauth()" class="btn btn-facebook">Logout</button>
