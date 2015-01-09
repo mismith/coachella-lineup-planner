@@ -159,6 +159,10 @@ angular.module('firebaseHelper', ['firebase'])
 	}]);
 angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseHelper'])
 	
+	.run(function(){
+		FastClick.attach(document.body);
+	})
+	
 	.config(["$locationProvider", "$urlRouterProvider", "$stateProvider", function($locationProvider, $urlRouterProvider, $stateProvider){
 		$urlRouterProvider.when('',  '/');
 		$urlRouterProvider.when('/',  '/2015'); // default year
@@ -230,12 +234,12 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 		$rootScope.$authThen = function(callback){
 			if ( ! $rootScope.$me.uid){
 				$rootScope.$auth.$authWithOAuthPopup('facebook').then(function(authData){
-					callback(authData.uid);
+					if(angular.isFunction(callback)) callback(authData.uid);
 				}, function(error){
 					console.error(error);
 				});
 			}else{
-				callback();
+				if(angular.isFunction(callback)) callback();
 			}
 		};
 		
@@ -251,7 +255,14 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				
 				refreshAuthState();
 			}
-		})
+		});
+		
+		$rootScope.rubrics = {
+			'-1': "I would like to avoid this band.",
+			'0':  "I don't really know this band...",
+			'1':  "I wouldn't mind seeing this band.",
+			'2':  "I would love to see this band!",
+		};
 	}])
 	.controller('BandsCtrl', ["$scope", "$firebaseHelper", function($scope, $firebaseHelper){
 		// voting

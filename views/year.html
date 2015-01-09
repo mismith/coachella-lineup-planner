@@ -1,4 +1,64 @@
 <div class="tablify tablify-collapse">
+	<aside id="sidebar" ng-controller="GroupsCtrl" class="well well-sm">
+		<h3>Cast Your Votes</h3>
+		<p>How do you feel about each of the bands playing at Coachella? Have your friends vote too, then sort by votes to see which bands you all want to see the most.</p>
+		<p>Here's an interactive rubric:</p>
+		<p id="legend">
+			<div class="btn-group" ng-init="rubric = 0">
+				<button class="btn btn-sm btn-default" ng-class="{'btn-danger': rubric == -1}" ng-click="rubric = rubric == -1 ? 0 : -1" title="{{ rubrics[-1] }}"><i class="glyphicon glyphicon-thumbs-down"></i> Nope</button>
+				<button class="btn btn-sm btn-default" ng-class="{'btn-warning': rubric == 1}" ng-click="rubric = rubric == 1 ? 0 : 1" title="{{ rubrics[1] }}"><i class="glyphicon glyphicon-thumbs-up"></i> Sure</button>
+				<button class="btn btn-sm btn-default" ng-class="{'btn-success': rubric == 2}" ng-click="rubric = rubric == 2 ? 0 : 2" title="{{ rubrics[2] }}"><i class="glyphicon glyphicon-heart"></i> Definitely</button>
+			</div>
+		</p>
+		<div>
+			<em><q ng-bind="rubrics[rubric]"></q></em>
+		</div>
+		<hr>
+		<div ng-if="group">
+			<section ng-if=" ! userInGroup($me.uid, group)">
+				<h3>Create a Group</h3>
+				<div ng-if="$me.uid">
+					<div ng-if="$me.$defaultGroup">
+						<p>You're currently looking at someone else's group. Do you want to go to the group with your own friends?</p>
+						<a ui-sref="year.group({year: $state.params.year, group: $me.$defaultGroup})" class="btn btn-primary">View My Group</a>
+					</div>
+					<div ng-if=" ! $me.$defaultGroup">
+						<p>You're currently looking at someone else's group. Do you want to make a group with your own friends?</p>
+						<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
+					</div>
+				</div>
+				<div ng-if=" ! $me.uid">
+					<p>Are you a part of this group? Do you want to make a group with your own friends? Login to compare your picks.</p>
+					<button ng-click="$authThen()" class="btn btn-social btn-facebook"><i class="fa fa-facebook"></i> Login with Facebook</button>
+				</div>
+				<hr>
+			</section>
+			<section>
+				<h3>Group Members</h3>
+				<ul class="list-group">
+					<li ng-repeat="user in users | orderBy:'facebook.displayName'" class="list-group-item">
+						<div class="tablify">
+							<span>
+								<img ng-src="http://graph.facebook.com/{{ user.facebook.id }}/picture?type=square" width="32" height="32" title="{{ user.facebook.displayName }}">
+							</span>
+							<span ng-bind="user.facebook.displayName"></span>
+							<span>
+								<button ng-if="userInGroup($me.uid, group)" ng-click="removeUserFromGroup(user.$id, group.$id, $state.params.year, $event.shiftKey)" class="btn btn-xs btn-close">&times;</button>
+							</span>
+						</div>
+					</li>
+				</ul>
+				<footer ng-if="userInGroup($me.uid, group)">
+					<button ng-click="invite(group)" class="btn btn-primary">Add Friends</button>
+				</footer>
+			</section>
+		</div>
+		<div ng-if=" ! group">
+			<h3>Create a Group</h3>
+			<p>Who else is going with you? Add them to a new group so you can tally which bands you all like.</p>
+			<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
+		</div>
+	</aside>
 	<div id="table">
 		<table class="table" ng-controller="BandsCtrl">
 			<thead>
@@ -38,61 +98,4 @@
 			</tbody>
 		</table>
 	</div>
-	<aside id="sidebar" ng-controller="GroupsCtrl" class="well well-sm">
-		<h3>Cast Your Votes</h3>
-		<p>How do you feel about each of the bands playing at Coachella? Have your friends vote too, then sort by votes to see which bands you all want to see the most.</p>
-		<p>Here's a quick rubric:</p>
-		<p id="legend">
-			<div class="btn-group">
-				<button class="btn btn-sm btn-default" title="I'd like to avoid this band"><i class="glyphicon glyphicon-thumbs-down"></i> Nope</button>
-				<button class="btn btn-sm btn-default" title="I wouldn't mind seeing this band"><i class="glyphicon glyphicon-thumbs-up"></i> Sure</button>
-				<button class="btn btn-sm btn-default" title="I would LOVE to see this band"><i class="glyphicon glyphicon-heart"></i> Definitely</button>
-			</div>
-		</p>
-		<hr>
-		<div ng-if="group">
-			<section ng-if=" ! userInGroup($me.uid, group)">
-				<h3>Create a Group</h3>
-				<div ng-if="$me.uid">
-					<div ng-if="$me.$defaultGroup">
-						<p>You're currently looking at someone else's group. Do you want to go to the group with your own friends?</p>
-						<a ui-sref="year.group({year: $state.params.year, group: $me.$defaultGroup})" class="btn btn-primary">View My Group</a>
-					</div>
-					<div ng-if=" ! $me.$defaultGroup">
-						<p>You're currently looking at someone else's group. Do you want to make a group with your own friends?</p>
-						<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
-					</div>
-				</div>
-				<div ng-if=" ! $me.uid">
-					<p>Are you a part of this group? Do you want to make a group with your own friends? Login to compare your picks.</p>
-					<button ng-click="$auth.$authWithOAuthPopup('facebook')" class="btn btn-social btn-facebook"><i class="fa fa-facebook"></i> Login with Facebook</button>
-				</div>
-				<hr>
-			</section>
-			<section>
-				<h3>Group Members</h3>
-				<ul class="list-group">
-					<li ng-repeat="user in users | orderBy:'facebook.displayName'" class="list-group-item">
-						<div class="tablify">
-							<span>
-								<img ng-src="http://graph.facebook.com/{{ user.facebook.id }}/picture?type=square" width="32" height="32" title="{{ user.facebook.displayName }}">
-							</span>
-							<span ng-bind="user.facebook.displayName"></span>
-							<span>
-								<button ng-if="userInGroup($me.uid, group)" ng-click="removeUserFromGroup(user.$id, group.$id, $state.params.year, $event.shiftKey)" class="btn btn-xs btn-close">&times;</button>
-							</span>
-						</div>
-					</li>
-				</ul>
-				<footer ng-if="userInGroup($me.uid, group)">
-					<button ng-click="invite(group)" class="btn btn-primary">Add Friends</button>
-				</footer>
-			</section>
-		</div>
-		<div ng-if=" ! group">
-			<h3>Create a Group</h3>
-			<p>Who else is going with you? Add them to a new group so you can tally which bands you all like.</p>
-			<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
-		</div>
-	</aside>
 </div>
