@@ -21,20 +21,22 @@
 <body ng-controller="AppCtrl">
 
 <div id="app">
-	<header class="navbar navbar-default tablify">
-		<h1 title="Coachella Lineup Planner">Coachella LP</h1>
-		<div ng-show="year = $state.params.year">
-			<select ng-model="year" ng-change="$state.go('year', {year: year})" class="form-control">
-				<option>2014</option>
-				<option>2015</option>
-			</select>
+	<header class="navbar navbar-default tablify tablify-collapse form-inline">
+		<div ng-show="year = $state.params.year" class="tablify" style="width: auto;">
+			<h1 title="Coachella Lineup Planner" style="white-space: nowrap;">Coachella LP</h1>
+			<div>
+				<select ng-model="year" ng-change="$state.go('year', {year: year})" class="form-control form-control-inline">
+					<option>2014</option>
+					<option>2015</option>
+				</select>
+			</div>
 		</div>
 		<nav>
 			<div ng-show=" ! $me.uid">
 				<button ng-click="$auth.$authWithOAuthPopup('facebook')" class="btn btn-social btn-facebook"><i class="fa fa-facebook"></i> Login with Facebook</button>
 			</div>
 			<div ng-show="$me.uid">
-				Logged in as <strong><span ng-bind="$me.facebook.displayName"></span> <img ng-src="http://graph.facebook.com/{{ $me.facebook.id }}/picture?type=square" width="34" height="34"></strong> <button ng-click="$auth.$unauth()" class="btn btn-facebook">Logout</button>
+				Logged in as <strong style="white-space: nowrap;"><span ng-bind="$me.facebook.displayName"></span> <img ng-src="http://graph.facebook.com/{{ $me.facebook.id }}/picture?type=square" width="34" height="34"></strong> <button ng-click="$auth.$unauth()" class="btn btn-facebook">Logout</button>
 			</div>
 		</nav>
 	</header>

@@ -1,10 +1,10 @@
-<div class="tablify">
+<div class="tablify tablify-collapse">
 	<div id="table">
 		<table class="table" ng-controller="BandsCtrl">
 			<thead>
 				<th ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
 				<th ng-click="toggleOrder('name')">
-					<ul ng-click="$event.stopPropagation()" class="list-unstyled btn-group pull-right">
+					<ul id="filters" ng-click="$event.stopPropagation()" class="list-unstyled btn-group pull-right">
 						<li ng-repeat="(day_id, day) in ['All Days', 'Day 1', 'Day 2', 'Day 3']" ng-click="$parent.filterDay = day_id" class="btn btn-xs btn-default" ng-class="{'btn-primary': filterDay == day_id}">
 							{{ day }}
 						</li>
@@ -40,7 +40,7 @@
 	</div>
 	<aside id="sidebar" ng-controller="GroupsCtrl" class="well well-sm">
 		<h3>Cast Your Votes</h3>
-		<p>How do you feel about each of the bands playing at Coachella?</p>
+		<p>How do you feel about each of the bands playing at Coachella? Have your friends vote too, then sort by votes to see which bands you all want to see the most.</p>
 		<p>Here's a quick rubric:</p>
 		<p id="legend">
 			<div class="btn-group">
@@ -49,29 +49,10 @@
 				<button class="btn btn-sm btn-default" title="I would LOVE to see this band"><i class="glyphicon glyphicon-heart"></i> Definitely</button>
 			</div>
 		</p>
-		<p><small>(Then you can sort by votes to see which bands you all want to see the most.)</small></p>
 		<hr>
 		<div ng-if="group">
-			<h3>Group Members</h3>
-			<ul class="list-group">
-				<li ng-repeat="user in users | orderBy:'facebook.displayName'" class="list-group-item">
-					<div class="tablify">
-						<span>
-							<img ng-src="http://graph.facebook.com/{{ user.facebook.id }}/picture?type=square" width="32" height="32" title="{{ user.facebook.displayName }}">
-						</span>
-						<span ng-bind="user.facebook.displayName"></span>
-						<span>
-							<button ng-if="userInGroup($me.uid, group)" ng-click="removeUserFromGroup(user.$id, group.$id, $state.params.year, $event.shiftKey)" class="btn btn-xs btn-close">&times;</button>
-						</span>
-					</div>
-				</li>
-			</ul>
-			<footer ng-if="userInGroup($me.uid, group)">
-				<button ng-click="invite(group)" class="btn btn-primary">Add Friends</button>
-			</footer>
-			<aside ng-if=" ! userInGroup($me.uid, group)">
-				<hr>
-				<h3>Create Group</h3>
+			<section ng-if=" ! userInGroup($me.uid, group)">
+				<h3>Create a Group</h3>
 				<div ng-if="$me.uid">
 					<div ng-if="$me.$defaultGroup">
 						<p>You're currently looking at someone else's group. Do you want to go to the group with your own friends?</p>
@@ -86,11 +67,31 @@
 					<p>Are you a part of this group? Do you want to make a group with your own friends? Login to compare your picks.</p>
 					<button ng-click="$auth.$authWithOAuthPopup('facebook')" class="btn btn-social btn-facebook"><i class="fa fa-facebook"></i> Login with Facebook</button>
 				</div>
-			</aside>
+				<hr>
+			</section>
+			<section>
+				<h3>Group Members</h3>
+				<ul class="list-group">
+					<li ng-repeat="user in users | orderBy:'facebook.displayName'" class="list-group-item">
+						<div class="tablify">
+							<span>
+								<img ng-src="http://graph.facebook.com/{{ user.facebook.id }}/picture?type=square" width="32" height="32" title="{{ user.facebook.displayName }}">
+							</span>
+							<span ng-bind="user.facebook.displayName"></span>
+							<span>
+								<button ng-if="userInGroup($me.uid, group)" ng-click="removeUserFromGroup(user.$id, group.$id, $state.params.year, $event.shiftKey)" class="btn btn-xs btn-close">&times;</button>
+							</span>
+						</div>
+					</li>
+				</ul>
+				<footer ng-if="userInGroup($me.uid, group)">
+					<button ng-click="invite(group)" class="btn btn-primary">Add Friends</button>
+				</footer>
+			</section>
 		</div>
 		<div ng-if=" ! group">
-			<h3>Create Group</h3>
-			<p>Who else is going with you this year? Add them to a new group so you can tally which bands you all want to see.</p>
+			<h3>Create a Group</h3>
+			<p>Who else is going with you? Add them to a new group so you can tally which bands you all like.</p>
 			<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
 		</div>
 	</aside>
