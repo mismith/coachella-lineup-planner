@@ -22,7 +22,7 @@
 						<div class="btn-group">
 							<button ng-click="vote(band.$id, -1)" class="btn btn-default btn-sm" ng-class="{'btn-danger':  $me.uid ? band.votes[$me.uid].vote == -1 : false}" title="Nope"><i class="glyphicon glyphicon-thumbs-down"></i></button>
 							<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': $me.uid ? band.votes[$me.uid].vote == 1 : false}" title="Sure"><i class="glyphicon glyphicon-thumbs-up"></i></button>
-							<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $me.uid ? band.votes[$me.uid].vote == 2 : false}" title="Definitely"><i class="glyphicon glyphicon-star"></i></button>
+							<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $me.uid ? band.votes[$me.uid].vote == 2 : false}" title="Definitely"><i class="glyphicon glyphicon-heart"></i></button>
 						</div>
 					</td>
 					<td ng-if="group" class="voters">
@@ -39,6 +39,18 @@
 		</table>
 	</div>
 	<aside id="sidebar" ng-controller="GroupsCtrl" class="well well-sm">
+		<h3>Cast Your Votes</h3>
+		<p>How do you feel about each of the bands playing at Coachella?</p>
+		<p>Here's a quick rubric:</p>
+		<p id="legend">
+			<div class="btn-group">
+				<button class="btn btn-sm btn-default" title="I'd like to avoid this band"><i class="glyphicon glyphicon-thumbs-down"></i> Nope</button>
+				<button class="btn btn-sm btn-default" title="I wouldn't mind seeing this band"><i class="glyphicon glyphicon-thumbs-up"></i> Sure</button>
+				<button class="btn btn-sm btn-default" title="I would LOVE to see this band"><i class="glyphicon glyphicon-heart"></i> Definitely</button>
+			</div>
+		</p>
+		<p><small>(Then you can sort by votes to see which bands you all want to see the most.)</small></p>
+		<hr>
 		<div ng-if="group">
 			<h3>Group Members</h3>
 			<ul class="list-group">
