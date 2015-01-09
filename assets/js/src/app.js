@@ -74,7 +74,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 		});
 		$rootScope.$authThen = function(callback){
 			if ( ! $rootScope.$me.uid){
-				$rootScope.$auth.$authWithOAuthPopup('facebook').then(function(authData){
+				$rootScope.$auth['$authWithOAuth' + (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Redirect' : 'Popup')]('facebook').then(function(authData){
 					if(angular.isFunction(callback)) callback(authData.uid);
 				}, function(error){
 					console.error(error);
