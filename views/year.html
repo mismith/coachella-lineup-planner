@@ -51,13 +51,13 @@
 				</li>
 				<li ng-if="userInGroup($me.uid, group)">
 					<br>
-					<button ng-click="invite()" class="btn btn-info">Add Friends</button>
+					<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
 				</li>
 			</ul>
 		</div>
 		<div ng-if=" ! group">
 			<p>Who else is going with you this year? Add them to your group so you can tally which bands you all want to see.</p>
-			<button ng-click="invite()" class="btn btn-info">Add Friends</button>
+			<button ng-click="invite()" class="btn btn-primary">Add Friends</button>
 		</div>
 	</aside>
 </div>

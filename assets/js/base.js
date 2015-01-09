@@ -237,69 +237,8 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			}
 		})
 	}])
-	.controller('GroupsCtrl', ["$scope", "$state", "$q", "$firebaseHelper", function($scope, $state, $q, $firebaseHelper){
-		$scope.userInGroup = function(user_id, group){
-			return group && group.users ? !! group.users[user_id] : false;
-		};
-		$scope.addUserToGroup = function(user_id, group_id, year){
-			// @TODO: what if user is already in a group?
-			return $q.all([
-				$firebaseHelper.$inst('users', user_id, 'groups').$set(year, group_id),
-				$firebaseHelper.$inst('groups', year, group_id, 'users').$set(user_id, user_id),
-			]);
-		};
-		$scope.removeUserFromGroup = function(user_id, group_id, year, skipConfirm){
-			if(skipConfirm || confirm('Are you sure you want to remove this user from this group?')){
-				return $q.all([
-					$firebaseHelper.$inst('users', user_id, 'groups').$remove(year),
-					$firebaseHelper.$inst('groups', year, group_id, 'users').$remove(user_id),
-				]);
-			}
-		};
-		$scope.invite = function(){
-			$scope.$authThen(function(){
-				FB.ui({
-					method: 'apprequests',
-					title: 'Group Members',
-					message: 'Let\'s figure out which bands we all want to see this year.',
-				}, function(response){
-					if( ! response){
-						console.error('Facebook Error: No Response');
-					}else if(response.error){
-						console.error('Facebook Error: ' + response.error);
-					}else{
-						if(response.to){
-							var link = function(){
-								$scope.group.$loaded().then(function(){
-									// add all invited users to group
-									response.to.push($scope.$me.facebook.id); // include self
-									angular.forEach(response.to, function(fbid){
-										var uid = 'facebook:' + fbid;
-										
-										$scope.addUserToGroup(uid, $scope.group.$id, $state.params.year);
-									});
-								});
-							};
-							if( ! $scope.group){
-								// create a new group
-								$firebaseHelper.$get('groups', $state.params.year, true).$add().then(function(groupRef){
-									var group_id = groupRef.key();
-									$scope.group = $firebaseHelper.$get('groups', $state.params.year, group_id);
-									
-									link();
-									
-									$state.go('year.group', {group: group_id});
-								});
-							}else{
-								link();
-							}
-						}
-					}
-				});
-			});
-		}
-	}])
 	.controller('BandsCtrl', ["$scope", "$firebaseHelper", function($scope, $firebaseHelper){
+		// voting
 		$scope.vote = function(band_id, vote){
 			$scope.$authThen(function(uid){
 				var $item = $firebaseHelper.$child($scope.bands, band_id + '/votes/' + (uid || $scope.$me.uid) + '/vote')
@@ -313,6 +252,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			});
 		};
 		
+		// sorting
 		$scope.filterDay   = 0;
 		$scope.orderBy     = undefined;
 		$scope.orderByStr  = undefined;
@@ -376,6 +316,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			return $scope.data.score = total;
 		});
 		
+		// editing
 		$scope.add = function(band){
 			if(band && band.name && band.day){
 				$scope.bands.$add(band).then(function(){
@@ -392,6 +333,68 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				$scope.bands.$remove(band);
 			}
 		};
+	}])
+	.controller('GroupsCtrl', ["$scope", "$state", "$q", "$firebaseHelper", function($scope, $state, $q, $firebaseHelper){
+		$scope.userInGroup = function(user_id, group){
+			return group && group.users ? !! group.users[user_id] : false;
+		};
+		$scope.addUserToGroup = function(user_id, group_id, year){
+			// @TODO: what if user is already in a group?
+			return $q.all([
+				$firebaseHelper.$inst('users', user_id, 'groups').$set(year, group_id),
+				$firebaseHelper.$inst('groups', year, group_id, 'users').$set(user_id, user_id),
+			]);
+		};
+		$scope.removeUserFromGroup = function(user_id, group_id, year, skipConfirm){
+			if(skipConfirm || confirm('Are you sure you want to remove this user from this group?')){
+				return $q.all([
+					$firebaseHelper.$inst('users', user_id, 'groups').$remove(year),
+					$firebaseHelper.$inst('groups', year, group_id, 'users').$remove(user_id),
+				]);
+			}
+		};
+		$scope.invite = function(){
+			$scope.$authThen(function(){
+				FB.ui({
+					method: 'apprequests',
+					title: 'Group Members',
+					message: 'Let\'s figure out which bands we all want to see this year.',
+				}, function(response){
+					if( ! response){
+						console.error('Facebook Error: No Response');
+					}else if(response.error){
+						console.error('Facebook Error: ' + response.error);
+					}else{
+						if(response.to){
+							var link = function(){
+								$scope.group.$loaded().then(function(){
+									// add all invited users to group
+									response.to.push($scope.$me.facebook.id); // include self
+									angular.forEach(response.to, function(fbid){
+										var uid = 'facebook:' + fbid;
+										
+										$scope.addUserToGroup(uid, $scope.group.$id, $state.params.year);
+									});
+								});
+							};
+							if( ! $scope.group){
+								// create a new group
+								$firebaseHelper.$get('groups', $state.params.year, true).$add().then(function(groupRef){
+									var group_id = groupRef.key();
+									$scope.group = $firebaseHelper.$get('groups', $state.params.year, group_id);
+									
+									link();
+									
+									$state.go('year.group', {group: group_id});
+								});
+							}else{
+								link();
+							}
+						}
+					}
+				});
+			});
+		}
 	}])
 	
 	.directive('ngAutofocus', function(){
@@ -410,4 +413,5 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 	
 	
 	// @TODO: get user name from facebook based on id somehow / reimplement user inviting based on emails instead?
+	// @TODO: get vote grouping actually working
 	// @TODO: security rules
