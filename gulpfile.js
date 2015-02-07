@@ -4,11 +4,11 @@ var PROXY_ADDR = 'coachellalp.dev',
 	
 var globs = {
 	js: [
-		ASSET_PATH + '/js/modules/**/*.js',
-		ASSET_PATH + '/js/src/**/*.js',
+		ASSET_PATH + '/scripts/**/*.js',
 	],
 	less: [
-		ASSET_PATH + '/less/**/*.less',
+		ASSET_PATH + '/styles/**/*.less',
+		'!' + ASSET_PATH + '/styles/**/*.inc.less',
 	],
 	files: [
 		'**/.htaccess',
