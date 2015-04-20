@@ -21,19 +21,23 @@
 <body ng-controller="AppCtrl">
 
 <div id="app">
-	<header class="navbar navbar-default tablify tablify-collapse form-inline">
-		<div ng-show="event = $state.params.event" class="tablify" style="width: auto;">
-			<h1 style="white-space: nowrap;">Lineup Planner</h1>
-			<div>
-				<select ng-model="event" ng-options="event.$id as event.name for event in events" ng-if="events.length" ng-change="$state.go('event', {event: event, group: ''})" class="form-control form-control-inline"></select>
-				<div ng-if="$me.admin" ng-controller="EventsCtrl" class="btn-group">
-					<a ui-sref="edit({event: $state.params.event})" ng-if="$state.current.name != 'edit'" class="btn btn-default"><i class="glyphicon glyphicon-pencil"></i></a>
-					<a ui-sref="event({event: $state.params.event})" ng-if="$state.current.name == 'edit'" class="btn btn-primary"><i class="glyphicon glyphicon-pencil"></i></a>
-					<a ng-click="newEvent()" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></a>
-				</div>
-			</div>
-		</div>
-		<nav>
+	<header id="header" class="navbar navbar-default tablify tablify-collapse">
+		<h1>Lineup Planner</h1>
+		<form ng-controller="EventsCtrl" class="form-inline">
+			<span ng-if="$state.current.name != 'edit'">
+				<select ng-model="$state.params.event" ng-options="$event.$id as $event.name for $event in events" ng-if="events.length" ng-change="$state.go('event', {event: $state.params.event, group: ''})" class="form-control"></select>
+			</span>
+			<span ng-if="$state.current.name == 'edit'">
+				<input type="text" ng-model="event.name" placeholder="Event Name" class="form-control">
+				<input type="number" ng-model="event.days" min="1" placeholder="Days" class="form-control">
+			</span>
+			<span ng-if="$me.admin" class="btn-group">
+				<a ui-sref="edit({event: $state.params.event})" ng-if="$state.current.name != 'edit'" class="btn btn-default"><i class="glyphicon glyphicon-pencil"></i></a>
+				<a ui-sref="event({event: $state.params.event})" ng-if="$state.current.name == 'edit'" class="btn btn-primary"><i class="glyphicon glyphicon-pencil"></i></a>
+				<a ng-click="newEvent()" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></a>
+			</span>
+		</form>
+		<nav class="form-inline">
 			<div ng-show=" ! $me.uid">
 				<button ng-click="$authThen()" class="btn btn-social btn-facebook"><i class="fa fa-facebook"></i> Login with Facebook</button>
 			</div>

@@ -79,7 +79,14 @@ angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper']
 		$rootScope.events = $firebaseHelper.array('events');
 		
 		$rootScope.$on('$stateChangeSuccess', function(){
-			$rootScope.bands = $firebaseHelper.array('bands/' + $state.params.event);
+			$rootScope.event = $firebaseHelper.object('events',$state.params.event);
+			$rootScope.bands = $firebaseHelper.array('bands', $state.params.event);
+			
+			// filtering
+			$rootScope.event.$loaded().then(function(event){
+				$rootScope.event.$days = ['All Days'];
+				for(var i = 1; i <= event.days; i++) $rootScope.event.$days.push(i);
+			});
 			
 			if($state.params.group){ // group is explicitly specified
 				$rootScope.group = $firebaseHelper.object('groups/' + $state.params.event + '/' + $state.params.group);
@@ -104,6 +111,7 @@ angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper']
 			if(name){
 				var slug = name.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-').replace(/^\-|\-$/g, '');
 				
+				// @TODO: what if event with this slug/name already exists? (!)
 				$firebaseHelper.ref('events/' + slug).set({name: name}, function(){
 					$state.go('edit', {event: slug});
 				});
@@ -200,6 +208,8 @@ angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper']
 					// focus on input so we can quickly add more
 					$scope.added = true;
 				});
+			}else{
+				console.error('Missing required field.');
 			}
 		};
 		$scope.remove = function(band, skipConfirm){
@@ -212,19 +222,25 @@ angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper']
 		$scope.userInGroup = function(user_id, group){
 			return group && group.users ? !! group.users[user_id] : false;
 		};
-		$scope.addUserToGroup = function(user_id, group_id, event){
-			// @TODO: what if user is already in a group?
-			return $q.all([
-				$firebaseHelper.$inst('users', user_id, 'groups', event).$set(group_id, group_id),
-				$firebaseHelper.$inst('groups', event, group_id, 'users').$set(user_id, user_id),
-			]);
+		$scope.addUserToGroup = function(user_id, group_id, event_id){
+			// @TODO: what if user is already in a group? (!)
+			var d1 = $q.defer(),
+				d2 = $q.defer();
+			
+			$firebaseHelper.ref('users', user_id, 'groups', event_id, group_id).set(group_id, d1.resolve);
+			$firebaseHelper.ref('groups', event_id, group_id, 'users', user_id).set(user_id, d2.resolve);
+			
+			return $q.all([d1.promise, d2.promise]);
 		};
-		$scope.removeUserFromGroup = function(user_id, group_id, event, skipConfirm){
+		$scope.removeUserFromGroup = function(user_id, group_id, event_id, skipConfirm){
 			if(skipConfirm || confirm('Are you sure you want to remove this user from this group?')){
-				return $q.all([
-					$firebaseHelper.$inst('users', user_id, 'groups', event).$remove(group_id),
-					$firebaseHelper.$inst('groups', event, group_id, 'users').$remove(user_id),
-				]);
+				var d1 = $q.defer(),
+					d2 = $q.defer();
+				
+				$firebaseHelper.ref('users', user_id, 'groups', event_id, group_id).remove(function(err){ if(err) d1.reject(); else d1.resolve(); });
+				$firebaseHelper.ref('groups', event_id, group_id, 'users', user_id).remove(function(err){ if(err) d2.reject(); else d2.resolve(); });
+				
+				return $q.all([d1.promise, d2.promise]);
 			}
 		};
 		$scope.invite = function($group){
@@ -249,10 +265,10 @@ angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper']
 										// fetch some basic user info for user-friendly identification purposes
 										$http.get('https://graph.facebook.com/' + fbid).then(function(response){
 											if(response && response.data){
-												var $user = $firebaseHelper.$inst('users', uid);
-												$user.$set('uid', uid);
-												$user.$update('facebook', response.data);
-												$user.$set('facebook/displayName', response.data.name); // @HACK
+												var $user = $firebaseHelper.ref('users', uid);
+												$user.child('uid').set(uid);
+												$user.child('facebook').update(response.data);
+												$user.child('facebook/displayName').set(response.data.name); // @HACK
 											}
 										});
 										

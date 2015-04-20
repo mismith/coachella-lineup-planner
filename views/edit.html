@@ -1,32 +1,26 @@
 <table class="table" ng-controller="BandsCtrl">
 	<thead>
-		<th ng-show=" ! filterDay" ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-		<th ng-click="toggleOrder('name')" colspan="2">
-			<ul ng-click="$event.stopPropagation()" class="list-unstyled btn-group pull-right">
-				<li ng-repeat="(day_id, day) in ['All Days', 'Day 1', 'Day 2', 'Day 3']" ng-click="$parent.filterDay = day_id" class="btn btn-xs btn-default" ng-class="{'btn-primary': filterDay == day_id}">
-					{{ day }}
-				</li>
-			</ul>
+		<th class="day" ng-show=" ! filterDay" ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
+		<th class="name" ng-click="toggleOrder('name')" colspan="2">
 			Band<span ng-show="orderByStr == 'name'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span>
 		</th>
 	</thead>
 	<tbody>
-		<tr ng-controller="BandCtrl" ng-init="band = {}">
-			<td width="5%"><input type="number" ng-model="band.day" class="form-control" min="1" required></td>
-
-			<td>
-				<input ng-model="band.name" class="form-control" ng-autofocus="added" ng-focus="added = false" ng-keypress="$event.keyCode == 13 ? add(band) : null" required>
+		<tr ng-controller="BandCtrl" ng-init="band = {}" class="new">
+			<td class="day"><input type="number" ng-model="band.day" class="form-control" min="1" required></td>
+			<td class="name">
+				<input ng-model="band.name" class="form-control" ng-autofocus="added" ng-focus="added = false" ng-keypress="$event.keyCode == 13 ? add(band) : null" placeholder="Band Name" required>
 			</td>
-			<td width="1%">
+			<td class="controls">
 				<button ng-click="add(band)" class="btn btn-success"><i class="glyphicon glyphicon-plus"></i></button>
 			</td>
 		</tr>
 		<tr ng-repeat="band in bands | orderBy:orderBy:orderByDir | filter:(filterDay ? {day:filterDay} : null)" ng-controller="BandCtrl" ng-init="init(band)">
-			<td ng-show=" ! filterDay"><input type="number" ng-model="band.day" class="form-control" min="1" required></td>
-			<td>
+			<td class="day" ng-show=" ! filterDay"><input type="number" ng-model="band.day" class="form-control" min="1" required></td>
+			<td class="name">
 				<input ng-model="band.name" class="form-control">
 			</td>
-			<td>
+			<td class="controls">
 				<button ng-click="remove(band, $event.shiftKey)" class="btn btn-danger"><i class="glyphicon glyphicon-minus"></i></button>
 			</td>
 		</tr>
