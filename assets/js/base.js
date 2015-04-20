@@ -1,239 +1,72 @@
-angular.module('firebaseHelper', ['firebase'])
-
-	.service('$firebaseHelper', ['$firebase', '$firebaseAuth', '$q', function($firebase, $firebaseAuth, $q){
-		var self      = this,
-			namespace = '',
-			cached    = {};
-		
-		// get or set namespace/Firebase reference domain
-		self.namespace = function(set){
-			if(set !== undefined) namespace = set;
-			return namespace;
-		};
-		
-		// $firebaseAuth wrapper
-		self.$auth = function(ref){
-			if( ! ref) ref = self.$ref(); // empty, use root by default
-			else if(angular.isString(ref)) ref = self.$ref(ref); // string/path
-			else if(angular.isFunction(ref.$ref)) ref = ref.$ref; // Instance
-			
-			return $firebaseAuth(ref);
-		};
-		
-		// returns: Reference
-		self.$ref = function(){
-			var args = Array.prototype.slice.call(arguments);
-			
-			var path = 'Ref/' + args.join('/');
-			if(cached[path]) return cached[path];
-			
-			var $ref = new Firebase('https://' + namespace + '.firebaseio.com/' + (args.join('/') || ''));
-			cached[path] = $ref;
-			
-			return $ref;
-		};
-		
-		// returns: Instance
-		self.$inst = function(){
-			if(arguments.length == 1 && arguments[0] instanceof Firebase){
-				// accept/handle firebase $ref as argument too, not just string(s)
-				var ref  = arguments[0],
-					path = 'Inst' + ref.path;
-				
-				if(cached[path]) return cached[path];
-				
-				var $inst = $firebase(ref);
-				cached[path] = $inst;
-			
-				return $inst;
-			}else{
-				// handle string(s)
-				var args = Array.prototype.slice.call(arguments),
-					path = 'Inst/' + args.join('/');
-				if(cached[path]) return cached[path];
-				
-				var $inst = $firebase(self.$ref.apply(this, args));
-				cached[path] = $inst;
-			
-				return $inst;
-			}
-		};
-		
-		// returns: Object or Array
-		// i.e. if last argument === true, return Array instead of Object
-		self.$get = function(){
-			var args = Array.prototype.slice.call(arguments),
-				type = 'Object';
-			
-			if(args[args.length - 1] === true){
-				type = 'Array';
-				args.pop();
-			}
-			
-			// retrieve cached item, if possible
-			var path = type + '/' + args.join('/');
-			if(cached[path]) return cached[path];
-			
-			// retrieve from remote, then cache it for later
-			var $get = self.$inst.apply(this, args)['$as'+type]();
-			cached[path] = $get;
-			
-			return $get;
-		};
-		
-		// returns: promise for Object or Array
-		self.$load = function(){
-			return self.$get.apply(this, arguments).$loaded();
-		};
-		
-		// returns: Instance
-		self.$child = function(){
-			var args = Array.prototype.slice.call(arguments),
-				parent = args.shift();
-			
-			if(angular.isFunction(parent.$inst)){ // it's a Firebase Object or Array
-				parent = parent.$inst();
-			}
-			if(angular.isFunction(parent.$ref)){ // it's a Firebase Instance
-				parent = parent.$ref();
-			}
-			if(angular.isFunction(parent.child)){ // it's a Firebase Reference
-				return self.$inst(parent.child(args.join('/')));
-			}
-			return parent; // fallback to parent
-		};
-		
-		self.$populate = function(keys, values, cbAdded){
-			var array   = [],
-				keysRef = self.$ref(keys);
-			
-			// fire callback even if no keys found
-			keysRef.once('value', function(snapshot){
-				if( ! angular.isObject(snapshot.val())){
-					if(angular.isFunction(cbAdded)) cbAdded();
-				}
-			});
-			
-			// watch for additions/deletions at keysRef
-			keysRef.on('child_added', function(snapshot){
-				var $item = self.$get(values, snapshot.key());
-				
-				$item.$loaded().then(function(){
-					var deferreds = [];
-					if(angular.isFunction(cbAdded)) deferreds.push(cbAdded($item));
-					
-					$q.all(deferreds).then(function(){
-						array.push($item);
-					});
-				});
-			});
-			keysRef.on('child_removed', function(snapshot){
-				var i = -1,
-					$id = snapshot.key();
-				
-				angular.forEach(array, function(item, j){
-					if(i >= 0) return;
-					if(item.$id == $id) i = j;
-				});
-				if(i >= 0) array.splice(i, 1);
-			});
-			return array;
-		};
-		
-		// @requires: external Firebase.util library: https://github.com/firebase/firebase-util
-		self.$intersect = function(keysPath, valuesPath, keysMap, valuesMap){
-			if( ! Firebase.util) throw new Error('$firebaseHelper.$intersect requires Firebase.util external library. See: https://github.com/firebase/firebase-util');
-			
-			// @TODO: cache somehow
-			
-			var keysObj   = {ref: self.$ref(keysPath)},
-				valuesObj = {ref: self.$ref(valuesPath)};
-			
-			if(keysMap)   keysObj.keyMap   = keysMap;
-			if(valuesMap) valuesObj.keyMap = valuesMap;
-			
-			return $firebase(Firebase.util.intersection(keysObj, valuesObj)).$asArray();
-		};
-		
-		return self;
-	}]);
-angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseHelper'])
+angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper'])
 	
 	.run(function(){
 		FastClick.attach(document.body);
 	})
 	
-	.config(["$locationProvider", "$urlRouterProvider", "$stateProvider", function($locationProvider, $urlRouterProvider, $stateProvider){
+	.config(["$urlRouterProvider", "$stateProvider", "$firebaseHelperProvider", function($urlRouterProvider, $stateProvider, $firebaseHelperProvider){
+		// routing
 		$urlRouterProvider.when('',  '/');
-		$urlRouterProvider.when('/',  '/2015'); // default year
+		$urlRouterProvider.when('/',  '/2015'); // default event
 		$stateProvider
 			// pages
-			.state('year', {
-				url: '/:year',
-				templateUrl: 'views/year.html',
-			})
-				.state('year.group', {
-					url: '/:group',
-				})
-			.state('year:edit', {
-				url: '/:year/edit',
+			.state('edit', {
+				url: '/:event/edit',
 				templateUrl: 'views/edit.html',
-				resolve: {
-					authorization: ["$rootScope", "$q", function($rootScope, $q){
-						var deferred = $q.defer();
-					
-						if($rootScope.$me.uid == 'facebook:120605287' /* Murray Smith */){
-							deferred.resolve();
-						}else{
-							deferred.reject();
-						}
-						
-						return deferred.promise;
-					}],
-				},
-			});
+			})
+			.state('event', {
+				url: '/:event',
+				templateUrl: 'views/event.html',
+			})
+				.state('group', {
+					parent: 'event',
+					url: '/:group',
+				});
+		
+		// data
+		$firebaseHelperProvider.namespace('coachellalp');
 	}])
 	
-	.controller('AppCtrl', ["$rootScope", "$state", "$firebaseHelper", function($rootScope, $state, $firebaseHelper){
-		$firebaseHelper.namespace('coachellalp');
+	.factory('Auth', ["$firebaseHelper", function($firebaseHelper){
+		return $firebaseHelper.auth();
+	}])
+	.controller('AppCtrl', ["$rootScope", "$state", "$firebaseHelper", "Auth", function($rootScope, $state, $firebaseHelper, Auth){
 		$rootScope.$state = $state;
 		
 		var refreshAuthState = function(){
 			if( ! $rootScope.$me || ! $rootScope.$me.$loaded) return;
 			
 			$rootScope.$me.$loaded().then(function(me){
-				// check if user is already in a group this year, and redirect there if so
-				if($state.params.year && me.groups && me.groups[$state.params.year]){
-					// determine default group (first one this year they are a member of)
+				// check if user is already in a group for this event, and redirect there if so
+				if($state.params.event && me.groups && me.groups[$state.params.event] && ! $state.params.group && $state.current.name != 'edit'){
+					// determine default group (first one this event they are a member of)
 					$rootScope.$me.$defaultGroup = false;
-					angular.forEach(me.groups[$state.params.year], function(group_id){
+					angular.forEach(me.groups[$state.params.event], function(group_id){
 						if($rootScope.$me.$defaultGroup) return;
 						$rootScope.$me.$defaultGroup = group_id;
 					});
 					
-					if( ! $state.params.group){
-						// redirect
-						$state.go('year.group', {year: $state.params.year, group: $rootScope.$me.$defaultGroup});
-					}
+					// redirect
+					$state.go('group', {event: $state.params.event, group: $rootScope.$me.$defaultGroup});
 				}
 			});
 		};
 		$rootScope.$me = {};
-		$rootScope.$auth = $firebaseHelper.$auth();
-		$rootScope.$auth.$onAuth(function(authData){
+		$rootScope.$unauth = Auth.$unauth;
+		Auth.$onAuth(function(authData){
 			if(authData){
 				// logging in
-				$rootScope.$me = $firebaseHelper.$get('users/' + authData.uid); // fetch existing user profile
-				$rootScope.$me.$inst().$update(authData); // update it w/ any changes since last login
+				$rootScope.$me = $firebaseHelper.object('users/' + authData.uid); // fetch existing user profile
+				$rootScope.$me.$ref().update(authData); // update it w/ any changes since last login
 				refreshAuthState();
 			}else{
-				$rootScope.$me = {};
 				// page loaded or refreshed while not logged in, or logging out
+				$rootScope.$me = {};
 			}
 		});
 		$rootScope.$authThen = function(callback){
 			if ( ! $rootScope.$me.uid){
-				$rootScope.$auth['$authWithOAuth' + (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Redirect' : 'Popup')]('facebook').then(function(authData){
+				Auth['$authWithOAuth' + (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Redirect' : 'Popup')]('facebook').then(function(authData){
 					if(angular.isFunction(callback)) callback(authData.uid);
 				}, function(error){
 					console.error(error);
@@ -243,13 +76,14 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			}
 		};
 		
+		$rootScope.events = $firebaseHelper.array('events');
+		
 		$rootScope.$on('$stateChangeSuccess', function(){
-			$rootScope.bands = $firebaseHelper.$get('bands/' + $state.params.year, true);
+			$rootScope.bands = $firebaseHelper.array('bands/' + $state.params.event);
 			
 			if($state.params.group){ // group is explicitly specified
-				$rootScope.group = $firebaseHelper.$get('groups/' + $state.params.year + '/' + $state.params.group);
-				
-				$rootScope.users = $firebaseHelper.$populate('groups/' + $state.params.year + '/' + $state.params.group + '/users', 'users');
+				$rootScope.group = $firebaseHelper.object('groups/' + $state.params.event + '/' + $state.params.group);
+				$rootScope.users = $firebaseHelper.join('groups/' + $state.params.event + '/' + $state.params.group + '/users', 'users');
 			}else{ // no group explicitly specified
 				$rootScope.group = $rootScope.users = undefined;
 				
@@ -259,21 +93,34 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 		
 		$rootScope.rubrics = {
 			'-1': "I would like to avoid this band.",
-			'0':  "I don't really know this band...",
-			'1':  "I wouldn't mind seeing this band.",
-			'2':  "I would love to see this band!",
+			'0':  "I don't really know this band…",
+			'1':  "I would see this band.",
+			'2':  "I need to see this band!",
+		};
+	}])
+	.controller('EventsCtrl', ["$scope", "$firebaseHelper", "$state", function($scope, $firebaseHelper, $state){
+		$scope.newEvent = function(){
+			var name = prompt('What\'s the event name and year \n(e.g. "Funpalooza 2015")?');
+			if(name){
+				var slug = name.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-').replace(/^\-|\-$/g, '');
+				
+				$firebaseHelper.ref('events/' + slug).set({name: name}, function(){
+					$state.go('edit', {event: slug});
+				});
+			}
 		};
 	}])
 	.controller('BandsCtrl', ["$scope", "$firebaseHelper", function($scope, $firebaseHelper){
 		// voting
 		$scope.vote = function(band_id, vote){
 			$scope.$authThen(function(uid){
-				var $item = $firebaseHelper.$child($scope.bands, band_id + '/votes/' + (uid || $scope.$me.uid) + '/vote')
-				$item.$asObject().$loaded().then(function(item){
+				var $item = $firebaseHelper.object($scope.bands, band_id + '/votes/' + (uid || $scope.$me.uid) + '/vote'),
+					ref   = $item.$ref();
+				$item.$loaded().then(function(item){
 					if(item.$value == vote){
-						$item.$remove();
+						ref.remove();
 					} else {
-						$item.$set(vote);
+						ref.set(vote);
 					}
 				});
 			});
@@ -365,18 +212,18 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 		$scope.userInGroup = function(user_id, group){
 			return group && group.users ? !! group.users[user_id] : false;
 		};
-		$scope.addUserToGroup = function(user_id, group_id, year){
+		$scope.addUserToGroup = function(user_id, group_id, event){
 			// @TODO: what if user is already in a group?
 			return $q.all([
-				$firebaseHelper.$inst('users', user_id, 'groups', year).$set(group_id, group_id),
-				$firebaseHelper.$inst('groups', year, group_id, 'users').$set(user_id, user_id),
+				$firebaseHelper.$inst('users', user_id, 'groups', event).$set(group_id, group_id),
+				$firebaseHelper.$inst('groups', event, group_id, 'users').$set(user_id, user_id),
 			]);
 		};
-		$scope.removeUserFromGroup = function(user_id, group_id, year, skipConfirm){
+		$scope.removeUserFromGroup = function(user_id, group_id, event, skipConfirm){
 			if(skipConfirm || confirm('Are you sure you want to remove this user from this group?')){
 				return $q.all([
-					$firebaseHelper.$inst('users', user_id, 'groups', year).$remove(group_id),
-					$firebaseHelper.$inst('groups', year, group_id, 'users').$remove(user_id),
+					$firebaseHelper.$inst('users', user_id, 'groups', event).$remove(group_id),
+					$firebaseHelper.$inst('groups', event, group_id, 'users').$remove(user_id),
 				]);
 			}
 		};
@@ -385,7 +232,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 				FB.ui({
 					method: 'apprequests',
 					title: 'Group Members',
-					message: 'Let\'s figure out which bands we all want to see this year.',
+					message: 'Let\'s figure out which bands we all want to see this event.',
 				}, function(response){
 					if( ! response){
 						console.error('Facebook Error: No Response');
@@ -410,21 +257,21 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 										});
 										
 										// add the link
-										$scope.addUserToGroup(uid, $group.$id, $state.params.year);
+										$scope.addUserToGroup(uid, $group.$id, $state.params.event);
 									});
 									// include self
-									$scope.addUserToGroup($scope.$me.uid, $group.$id, $state.params.year);
+									$scope.addUserToGroup($scope.$me.uid, $group.$id, $state.params.event);
 								});
 							};
 							if( ! $group){
 								// create a new group
-								$firebaseHelper.$get('groups', $state.params.year, true).$add().then(function(groupRef){
+								$firebaseHelper.array('groups', $state.params.event).$add().then(function(groupRef){
 									var group_id = groupRef.key();
-									$group = $firebaseHelper.$get('groups', $state.params.year, group_id);
+									$group = $firebaseHelper.object('groups', $state.params.event, group_id);
 									
 									link();
 									
-									$state.go('year.group', {group: group_id});
+									$state.go('group', {group: group_id});
 								});
 							}else{
 								link();
@@ -454,7 +301,7 @@ angular.module('coachella', ['ui.router', 'ui.bootstrap', 'firebase', 'firebaseH
 			if(votes && group && group.users){
 				angular.forEach(votes, function(vote, user_id){
 					if( !! group.users[user_id]){
-						vote.$user = $firebaseHelper.$get('users', user_id);
+						vote.$user = $firebaseHelper.object('users', user_id);
 						filtered.push(vote);
 					}
 				});

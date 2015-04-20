@@ -1,7 +1,7 @@
 <table class="table" ng-controller="BandsCtrl">
 	<thead>
 		<th ng-show=" ! filterDay" ng-click="toggleOrder('day')">Day<span ng-show="orderByStr == 'day'" class="sort-arrow" ng-class="{reverse: orderByDir}"></span></th>
-		<th ng-click="toggleOrder('name')">
+		<th ng-click="toggleOrder('name')" colspan="2">
 			<ul ng-click="$event.stopPropagation()" class="list-unstyled btn-group pull-right">
 				<li ng-repeat="(day_id, day) in ['All Days', 'Day 1', 'Day 2', 'Day 3']" ng-click="$parent.filterDay = day_id" class="btn btn-xs btn-default" ng-class="{'btn-primary': filterDay == day_id}">
 					{{ day }}
@@ -12,16 +12,21 @@
 	</thead>
 	<tbody>
 		<tr ng-controller="BandCtrl" ng-init="band = {}">
-			<td><select ng-options="day for day in [1,2,3]" ng-model="band.day" class="form-control" required></select></td>
+			<td width="5%"><input type="number" ng-model="band.day" class="form-control" min="1" required></td>
+
 			<td>
 				<input ng-model="band.name" class="form-control" ng-autofocus="added" ng-focus="added = false" ng-keypress="$event.keyCode == 13 ? add(band) : null" required>
+			</td>
+			<td width="1%">
 				<button ng-click="add(band)" class="btn btn-success"><i class="glyphicon glyphicon-plus"></i></button>
 			</td>
 		</tr>
 		<tr ng-repeat="band in bands | orderBy:orderBy:orderByDir | filter:(filterDay ? {day:filterDay} : null)" ng-controller="BandCtrl" ng-init="init(band)">
-			<td ng-show=" ! filterDay"><select ng-options="day for day in [1,2,3]" ng-model="band.day" class="form-control"></select></td>
+			<td ng-show=" ! filterDay"><input type="number" ng-model="band.day" class="form-control" min="1" required></td>
 			<td>
 				<input ng-model="band.name" class="form-control">
+			</td>
+			<td>
 				<button ng-click="remove(band, $event.shiftKey)" class="btn btn-danger"><i class="glyphicon glyphicon-minus"></i></button>
 			</td>
 		</tr>

@@ -5,9 +5,9 @@
 		<p>Here's an interactive rubric:</p>
 		<div class="panel panel-default" style="text-align: center; padding: 10px;">
 			<div class="btn-group" ng-init="rubric = 0">
-				<button class="btn btn-sm btn-default" ng-class="{'btn-danger': rubric == -1}" ng-click="rubric = rubric == -1 ? 0 : -1" title="{{ rubrics[-1] }}"><i class="glyphicon glyphicon-thumbs-down"></i> Nope</button>
-				<button class="btn btn-sm btn-default" ng-class="{'btn-warning': rubric == 1}" ng-click="rubric = rubric == 1 ? 0 : 1" title="{{ rubrics[1] }}"><i class="glyphicon glyphicon-thumbs-up"></i> Sure</button>
-				<button class="btn btn-sm btn-default" ng-class="{'btn-success': rubric == 2}" ng-click="rubric = rubric == 2 ? 0 : 2" title="{{ rubrics[2] }}"><i class="glyphicon glyphicon-heart"></i> Definitely</button>
+				<button class="btn btn-sm btn-default" ng-class="{'btn-danger': rubric == -1}" ng-mouseenter="rubric = -1" ng-mouseleave="rubric = 0" title="{{ rubrics[-1] }}"><i class="glyphicon glyphicon-thumbs-down"></i> Nope</button>
+				<button class="btn btn-sm btn-default" ng-class="{'btn-warning': rubric == 1}" ng-mouseenter="rubric = 1" ng-mouseleave="rubric = 0" title="{{ rubrics[1] }}"><i class="glyphicon glyphicon-thumbs-up"></i> Sure</button>
+				<button class="btn btn-sm btn-default" ng-class="{'btn-success': rubric == 2}" ng-mouseenter="rubric = 2" ng-mouseleave="rubric = 0" title="{{ rubrics[2] }}"><i class="glyphicon glyphicon-heart"></i> Definitely</button>
 			</div>
 			<div style="padding-top: 5px;">
 				<em><q ng-bind="rubrics[rubric]"></q></em>
@@ -80,9 +80,9 @@
 					<td>{{ band.name }}</td>
 					<td class="buttons">
 						<div class="btn-group">
-							<button ng-click="vote(band.$id, -1)" class="btn btn-default btn-sm" ng-class="{'btn-danger':  $me.uid ? band.votes[$me.uid].vote == -1 : false}" title="Nope"><i class="glyphicon glyphicon-thumbs-down"></i></button>
-							<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': $me.uid ? band.votes[$me.uid].vote == 1 : false}" title="Sure"><i class="glyphicon glyphicon-thumbs-up"></i></button>
-							<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $me.uid ? band.votes[$me.uid].vote == 2 : false}" title="Definitely"><i class="glyphicon glyphicon-heart"></i></button>
+							<button ng-click="vote(band.$id, -1)" class="btn btn-default btn-sm" ng-class="{'btn-danger':  $me.uid ? band.votes[$me.uid].vote == -1 : false}" title="Nope: {{ rubrics[-1] }}"><i class="glyphicon glyphicon-thumbs-down"></i></button>
+							<button ng-click="vote(band.$id, 1)" class="btn btn-default btn-sm" ng-class="{'btn-warning': $me.uid ? band.votes[$me.uid].vote == 1 : false}" title="Sure: {{ rubrics[1] }}"><i class="glyphicon glyphicon-thumbs-up"></i></button>
+							<button ng-click="vote(band.$id, 2)" class="btn btn-default btn-sm" ng-class="{'btn-success': $me.uid ? band.votes[$me.uid].vote == 2 : false}" title="Definitely: {{ rubrics[2] }}"><i class="glyphicon glyphicon-heart"></i></button>
 						</div>
 					</td>
 					<td ng-if="group" class="voters">
