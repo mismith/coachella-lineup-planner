@@ -5,9 +5,9 @@
 		<p>Here's a hoverable rubric:</p>
 		<div class="panel panel-default" style="text-align: center; padding: 10px;">
 			<div class="btn-group" ng-init="rubric = 0">
-				<button class="btn btn-sm btn-default" ng-class="{'btn-danger': rubric == -1}" ng-mouseenter="rubric = -1" ng-mouseleave="rubric = 0" title="{{ rubrics[-1] }}"><i class="glyphicon glyphicon-thumbs-down"></i> Nope</button>
-				<button class="btn btn-sm btn-default" ng-class="{'btn-warning': rubric == 1}" ng-mouseenter="rubric = 1" ng-mouseleave="rubric = 0" title="{{ rubrics[1] }}"><i class="glyphicon glyphicon-thumbs-up"></i> Sure</button>
-				<button class="btn btn-sm btn-default" ng-class="{'btn-success': rubric == 2}" ng-mouseenter="rubric = 2" ng-mouseleave="rubric = 0" title="{{ rubrics[2] }}"><i class="glyphicon glyphicon-heart"></i> Definitely</button>
+				<button class="btn btn-sm btn-default" ng-class="{'btn-danger': rubric == -1}" ng-mouseenter="rubric = -1" ng-click="rubric = rubric == -1 ? 0 : -1" ng-mouseleave="rubric = 0" title="{{ rubrics[-1] }}"><i class="glyphicon glyphicon-thumbs-down"></i> Nope</button>
+				<button class="btn btn-sm btn-default" ng-class="{'btn-warning': rubric == 1}" ng-mouseenter="rubric = 1" ng-click="rubric = rubric == 1 ? 0 : 1" ng-mouseleave="rubric = 0" title="{{ rubrics[1] }}"><i class="glyphicon glyphicon-thumbs-up"></i> Sure</button>
+				<button class="btn btn-sm btn-default" ng-class="{'btn-success': rubric == 2}" ng-mouseenter="rubric = 2" ng-click="rubric = rubric == 2 ? 0 : 2" ng-mouseleave="rubric = 0" title="{{ rubrics[2] }}"><i class="glyphicon glyphicon-heart"></i> Definitely</button>
 			</div>
 			<div style="padding-top: 5px;">
 				<em><q ng-bind="rubrics[rubric]"></q></em>
