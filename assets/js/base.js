@@ -7,7 +7,6 @@ angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper']
 	.config(["$urlRouterProvider", "$stateProvider", "$firebaseHelperProvider", function($urlRouterProvider, $stateProvider, $firebaseHelperProvider){
 		// routing
 		$urlRouterProvider.when('',  '/');
-		$urlRouterProvider.when('/',  '/2015'); // default event
 		$stateProvider
 			// pages
 			.state('edit', {
@@ -24,7 +23,7 @@ angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper']
 				});
 		
 		// data
-		$firebaseHelperProvider.namespace('coachellalp');
+		$firebaseHelperProvider.namespace('lineup-planner');
 	}])
 	
 	.factory('Auth', ["$firebaseHelper", function($firebaseHelper){
@@ -33,6 +32,7 @@ angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper']
 	.controller('AppCtrl', ["$rootScope", "$state", "$firebaseHelper", "Auth", function($rootScope, $state, $firebaseHelper, Auth){
 		$rootScope.$state = $state;
 		
+		// auth
 		var refreshAuthState = function(){
 			if( ! $rootScope.$me || ! $rootScope.$me.$loaded) return;
 			
@@ -76,28 +76,37 @@ angular.module('lineup-planner', ['ui.router', 'ui.bootstrap', 'firebaseHelper']
 			}
 		};
 		
+		// data
 		$rootScope.events = $firebaseHelper.array('events');
-		
 		$rootScope.$on('$stateChangeSuccess', function(){
-			$rootScope.event = $firebaseHelper.object('events',$state.params.event);
-			$rootScope.bands = $firebaseHelper.array('bands', $state.params.event);
-			
-			// filtering
-			$rootScope.event.$loaded().then(function(event){
-				$rootScope.event.$days = ['All Days'];
-				for(var i = 1; i <= event.days; i++) $rootScope.event.$days.push(i);
-			});
-			
-			if($state.params.group){ // group is explicitly specified
-				$rootScope.group = $firebaseHelper.object('groups/' + $state.params.event + '/' + $state.params.group);
-				$rootScope.users = $firebaseHelper.join('groups/' + $state.params.event + '/' + $state.params.group + '/users', 'users');
-			}else{ // no group explicitly specified
-				$rootScope.group = $rootScope.users = undefined;
+			if($state.params.event){
+				$rootScope.event = $firebaseHelper.object('events',$state.params.event);
+				$rootScope.bands = $firebaseHelper.array('bands', $state.params.event);
 				
-				refreshAuthState();
+				// filtering
+				$rootScope.event.$loaded().then(function(event){
+					$rootScope.eventId = $state.params.event;
+					$rootScope.event.$days = ['All Days'];
+					for(var i = 1; i <= event.days; i++) $rootScope.event.$days.push(i);
+				});
+				
+				if($state.params.group){ // group is explicitly specified
+					$rootScope.group = $firebaseHelper.object('groups/' + $state.params.event + '/' + $state.params.group);
+					$rootScope.users = $firebaseHelper.join('groups/' + $state.params.event + '/' + $state.params.group + '/users', 'users');
+				}else{ // no group explicitly specified
+					$rootScope.group = $rootScope.users = undefined;
+					
+					refreshAuthState();
+				}
+			}else{
+				// redirect to latest event if none specified
+				$rootScope.events.$loaded().then(function(){
+					$state.go('event', {event: $rootScope.events[$rootScope.events.length - 1].$id});
+				});
 			}
 		});
 		
+		// constants
 		$rootScope.rubrics = {
 			'-1': "I would like to avoid this band.",
 			'0':  "I don't really know this band…",

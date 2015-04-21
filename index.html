@@ -25,7 +25,7 @@
 		<h1>Lineup Planner</h1>
 		<form ng-controller="EventsCtrl" class="form-inline">
 			<span ng-if="$state.current.name != 'edit'">
-				<select ng-model="$state.params.event" ng-options="$event.$id as $event.name for $event in events" ng-if="events.length" ng-change="$state.go('event', {event: $state.params.event, group: ''})" class="form-control"></select>
+				<select ng-model="eventId" ng-options="$event.$id as $event.name for $event in events" ng-if="events.length" ng-change="$state.go('event', {event: eventId, group: ''})" class="form-control"></select>
 			</span>
 			<span ng-if="$state.current.name == 'edit'">
 				<input type="text" ng-model="event.name" placeholder="Event Name" class="form-control">
@@ -58,7 +58,7 @@
 	<script src="//cdn.rawgit.com/mismith/angularfire-helper/2.0.2/angularfire-helper.min.js"></script>
 	
 	<script src="//cdnjs.cloudflare.com/ajax/libs/fastclick/1.0.3/fastclick.min.js"></script>
-	<script src="/assets/js/base.js"></script>
+	<script src="/assets/js/base.min.js"></script>
 	<script>
 		// Load FB SDK asynchronously
 		window.fbAsyncInit = function() {
